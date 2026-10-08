@@ -1,34 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PokéRanked
 
-## Getting Started
+Rank every main-series Pokémon game. Score each game across a few categories, watch it land in a tier (S to D), and share your board as a picture or a link.
 
-First, run the development server:
+It's a fully static Next.js site with no backend. Scores are kept in `localStorage`, share links carry the ranking in the URL hash, and share pictures are rendered in the browser.
+
+## Development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # http://localhost:3000
+npm test        # vitest
+npm run lint
+npm run build   # static export to out/
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Cover art
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Covers in `public/covers/` come from [IGDB](https://www.igdb.com). To refresh them, put your Twitch/IGDB credentials in `.env`:
 
-## Learn More
+```
+client_id=...
+client_secret=...
+```
 
-To learn more about Next.js, take a look at the following resources:
+then run `npm run covers`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Hosted on S3 + CloudFront, provisioned with Terraform in `infra/` (see `infra/README.md`). With the infra applied and AWS credentials set:
 
-## Deploy on Vercel
+```bash
+npm run deploy
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This builds the site, syncs `out/` to the bucket and invalidates the CloudFront cache.

@@ -51,7 +51,7 @@ There are no game images. Each game is drawn as a cartridge tile with two colour
 - **Score logic:** pure functions in `src/lib/scores.ts` for setting, clearing and averaging scores and grouping games into tiers. Both the board and the game page use them.
 - **Storage:** `src/lib/score-store.ts` keeps scores in localStorage and syncs open tabs.
 - **Static export:** Next.js builds plain HTML and assets with `output: "export"`. This needs `cacheComponents` and `partialPrefetching` removed from `next.config.ts`, because export mode can't run partial prerendering. A test build confirmed it produces `index.html`, one page per game and a `404.html`.
-- **Share links:** the board or game scores are compacted to one character per score in catalogue order (`1`–`9`, `a` for 10, `0` for no score) and put in the URL hash of `/share`, e.g. `/share#b=…` or `/share#g=hgss.9a8a`. The hash never reaches the host, and the page decodes it in the browser.
+- **Share links:** `/share#v=1&k=b&s=hgss9a8a88a.bw98aa87a&n=Ash`. Each rated game is its id followed by one character per category in catalogue order (`1`–`9`, `a` for 10, `0` for no score); `k` is `b` (board) or `g` (one game) and `n` is the optional name. The hash never reaches the host, and the page decodes it in the browser. Adding or reordering categories needs a new `v`.
 - **Share images:** the 1080×1350 board card and 1080×1080 game card are React components rendered off-screen, then captured to PNG with a small library such as `html-to-image`. Download PNG saves that file, and Copy image puts it on the clipboard.
 - **Link previews:** with no server, a shared link can't carry a preview image of that person's scores. It gets the site's generic preview image instead.
 - **Routes:** `/` (board), `/games/[id]`, `/share` (read-only shared view).
@@ -61,12 +61,12 @@ There are no game images. Each game is drawn as a cartridge tile with two colour
 1. **Foundations.** Done: theme colours and fonts, background tile, shared panels, buttons, cartridges and progress bar, and the game, category and tier data.
 2. **Tier board.** Done: score logic with unit tests, scoring panel, tier rows, unrated tray and progress bar, saved to localStorage.
 3. **Game page.** Done: `/games/[id]` with per-category score bars on the same scores, and the header from the catalogue data.
-4. **Share cards.** Build both 1080px cards as components and match them against the artboards.
-5. **Sharing.** Build the share dialog with the name field. Add PNG capture for Download PNG and Copy image, the URL encoding for Copy link, and the read-only `/share` page.
-6. **Static export and AWS deployment.** Switch to `output: "export"` (removing `cacheComponents` and `partialPrefetching`), then publish the `out/` folder to an S3 bucket behind CloudFront. Configure CloudFront to serve `404.html` for missing pages and to map clean URLs like `/games/hgss` to their `.html` files.
+4. **Share cards.** Done: the 1080×1350 board card and 1080×1080 game card, built to the artboards. When a full board doesn't fit, the board card shrinks its cartridges in steps until it does.
+5. **Sharing.** Done: the share dialog on the board (Share board, and Share game from the scoring panel), the game page's share panel, an optional name saved in the browser, PNG download and Copy image via `html-to-image`, Copy link, and the read-only `/share` page with a message for broken links.
+6. **Static export and AWS deployment.** Built: `output: "export"`, Terraform for S3 + CloudFront + ACM (+ optional Route 53) in `infra/`, and `npm run deploy`. Not yet applied to an AWS account; see `infra/README.md`.
 7. **QA.** Add Playwright tests for scoring, persistence and sharing, compare the running app against the canvas, and check accessibility (contrast, keyboard use, `aria-pressed`).
 
 ## Still open
 
 1. **Missing screens:** add the shared-link page and 404 page to the canvas first, or build them in the same style straight away?
-2. **Domain:** what is the site's domain, for the card footer and CloudFront?
+2. **DNS:** is `pokeranked.com` hosted in Route 53? That decides which first-deploy steps in `infra/README.md` apply.

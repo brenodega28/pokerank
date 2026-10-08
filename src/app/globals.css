@@ -29,6 +29,9 @@
   --color-track: #e2e6d2;
   --color-track-active: #f4f0c4;
   --color-unrated: #d0d0d8;
+  --color-well-dark: #383850;
+  --color-well-dark-text: #d8d8f0;
+  --color-success: #208040;
   --color-divider: #e0e0d4;
   --color-idle-border: #9898b0;
   --color-meter: #484860;
@@ -40,18 +43,28 @@
   --shadow-card: inset 0 -2px 0 var(--color-card-trim-edge), inset 0 0 0 2px var(--color-card-trim), inset 0 -6px 0 var(--color-card-lip), 5px 5px 0 rgb(16 16 32 / 0.35);
   --shadow-raised: inset 3px 3px 0 rgb(255 255 255 / 0.7), inset -3px -3px 0 rgb(0 0 0 / 0.16), 3px 3px 0 rgb(16 16 32 / 0.35);
   --shadow-raised-accent: inset 3px 3px 0 rgb(255 255 255 / 0.3), inset -3px -3px 0 rgb(0 0 0 / 0.3), 3px 3px 0 rgb(16 16 32 / 0.35);
+  --shadow-raised-accent-strong: inset 3px 3px 0 rgb(255 255 255 / 0.3), inset -3px -3px 0 rgb(0 0 0 / 0.3), 4px 4px 0 var(--color-ink-deep);
+  --shadow-raised-flat: inset 3px 3px 0 rgb(255 255 255 / 0.7), inset -3px -3px 0 rgb(0 0 0 / 0.16);
+  --shadow-well-dark: inset 4px 4px 0 rgb(0 0 0 / 0.3);
   --shadow-raised-highlight: inset 3px 3px 0 rgb(255 255 255 / 0.6), inset -3px -3px 0 rgb(0 0 0 / 0.18), 3px 3px 0 rgb(16 16 32 / 0.35);
   --shadow-cart-small: inset 2px 2px 0 rgb(255 255 255 / 0.12), inset 0 -3px 0 rgb(0 0 0 / 0.3), 4px 4px 0 rgb(16 16 32 / 0.35);
   --shadow-cart-small-selected: inset 2px 2px 0 rgb(255 255 255 / 0.12), inset 0 -3px 0 rgb(0 0 0 / 0.3), 0 0 0 3px var(--color-highlight), 0 0 0 5px var(--color-cart-edge), 6px 6px 0 rgb(16 16 32 / 0.35);
   --shadow-cart-large: inset 3px 3px 0 rgb(255 255 255 / 0.12), inset 0 -5px 0 rgb(0 0 0 / 0.3), 6px 6px 0 rgb(16 16 32 / 0.35);
   --shadow-cart-label-small: 0 0 0 2px #2e2e35, 0 0 0 3px #62626c;
   --shadow-cart-label-large: 0 0 0 3px #2e2e35, 0 0 0 5px #62626c;
+  --shadow-cart-poster: inset 4px 4px 0 rgb(255 255 255 / 0.12), inset 0 -7px 0 rgb(0 0 0 / 0.3), 8px 8px 0 rgb(16 16 32 / 0.35);
+  --shadow-cart-label-poster: 0 0 0 4px #2e2e35, 0 0 0 6px #62626c;
   --shadow-bevel: inset 3px 3px 0 rgb(255 255 255 / 0.45), inset -3px -3px 0 rgb(0 0 0 / 0.2);
   --shadow-tier-label: inset 5px 5px 0 rgb(255 255 255 / 0.4), inset -5px -5px 0 rgb(0 0 0 / 0.2);
   --shadow-well: inset 4px 4px 0 rgb(16 16 32 / 0.14);
   --shadow-header: 0 4px 0 rgb(16 16 32 / 0.35);
 
+  --shadow-card-poster: inset 0 -3px 0 var(--color-card-trim-edge), inset 0 0 0 3px var(--color-card-trim), inset 0 -9px 0 var(--color-card-lip), 8px 8px 0 rgb(16 16 32 / 0.35);
+  --shadow-tier-label-poster: inset 6px 6px 0 rgb(255 255 255 / 0.4), inset -6px -6px 0 rgb(0 0 0 / 0.2);
+
   --text-shadow-logo: 3px 3px 0 var(--color-accent);
+  --text-shadow-logo-card: 3px 3px 0 #f09090;
+  --text-shadow-tier-poster: 4px 4px 0 rgb(255 255 255 / 0.45);
   --text-shadow-tier: 3px 3px 0 rgb(255 255 255 / 0.45);
   --text-shadow-on-accent: 2px 2px 0 rgb(0 0 0 / 0.35);
 
@@ -101,7 +114,8 @@
   }
 
   button:focus-visible,
-  a:focus-visible {
+  a:focus-visible,
+  input:focus-visible {
     outline: 3px solid var(--color-focus);
     outline-offset: 3px;
   }

@@ -1,60 +1,93 @@
-import type { Game } from "@/data/games";
+import { coverArtPath, type Game } from "@/data/games";
 
-function CartridgeArt({ game, scanClass }: { game: Game; scanClass: string }) {
-  return (
-    <>
-      <span
-        className="absolute inset-0"
-        style={{ background: `linear-gradient(135deg, ${game.c1} 0 50%, ${game.c2} 50% 100%)` }}
-      />
-      <span className={`scanlines absolute inset-0 ${scanClass}`} />
-    </>
-  );
-}
+const SIZES = {
+  board: {
+    shell: "h-[133px] w-[124px] rounded-[4px_4px_4px_12px] border-2",
+    shellShadow: "shadow-cart-small",
+    label: "top-1 right-2 bottom-[13px] left-2 rounded-[2px_2px_2px_5px] shadow-cart-label-small",
+    code: "h-[15px] px-1 pt-[3px] text-[9px]",
+    scan: "[--scan:2px]",
+    badge: "right-[3px] bottom-[3px] px-[3px] pt-[3px] pb-0.5 text-[9px]",
+    footer: null,
+  },
+  card: {
+    shell: "h-[118px] w-[110px] rounded-[4px_4px_4px_11px] border-2",
+    shellShadow: "shadow-cart-small",
+    label: "top-1 right-[7px] bottom-[11px] left-[7px] rounded-[2px_2px_2px_5px] shadow-cart-label-small",
+    code: "h-3.5 px-1 pt-[3px] text-[8px]",
+    scan: "[--scan:2px]",
+    badge: "right-[3px] bottom-[3px] px-[3px] pt-[3px] pb-0.5 text-[9px]",
+    footer: null,
+  },
+  page: {
+    shell: "h-[246px] w-[230px] rounded-[6px_6px_6px_20px] border-3",
+    shellShadow: "shadow-cart-large",
+    label: "top-[9px] right-4 bottom-6 left-4 rounded-[3px_3px_3px_8px] shadow-cart-label-large",
+    code: "h-7 px-2 pt-[7px] text-sm",
+    scan: "[--scan:3px]",
+    badge: "",
+    footer: "h-[21px] px-2 pt-1.5 text-[8px]",
+  },
+  poster: {
+    shell: "h-[345px] w-[322px] rounded-[8px_8px_8px_28px] border-4",
+    shellShadow: "shadow-cart-poster",
+    label: "top-3 right-[22px] bottom-[34px] left-[22px] rounded-[4px_4px_4px_12px] shadow-cart-label-poster",
+    code: "h-10 px-3 pt-2.5 text-[22px]",
+    scan: "[--scan:3px]",
+    badge: "",
+    footer: "h-[30px] px-3 pt-[9px] text-[11px]",
+  },
+} as const;
 
-export function SmallCartridge({ game, scoreText, selected }: { game: Game; scoreText?: string; selected: boolean }) {
+const COVER_CROP_POSITIONS = {
+  top: "object-top",
+  center: "object-center",
+  bottom: "object-bottom",
+} as const;
+
+export type CartridgeSize = keyof typeof SIZES;
+
+type CartridgeProps = {
+  game: Game;
+  size: CartridgeSize;
+  scoreText?: string;
+  selected?: boolean;
+  footer?: string;
+};
+
+export function Cartridge({ game, size, scoreText, selected = false, footer }: CartridgeProps) {
+  const sizing = SIZES[size];
   return (
     <span
-      className={`relative box-border block h-[116px] w-[108px] flex-none rounded-[4px_4px_4px_12px] border-2 border-cart-edge bg-cart-shell ${
-        selected ? "shadow-cart-small-selected" : "shadow-cart-small"
+      aria-hidden="true"
+      className={`relative box-border block flex-none border-cart-edge bg-cart-shell ${sizing.shell} ${
+        selected ? "shadow-cart-small-selected" : sizing.shellShadow
       }`}
     >
-      <span className="absolute top-1 right-2 bottom-[13px] left-2 flex flex-col overflow-hidden rounded-[2px_2px_2px_5px] bg-cart-label shadow-cart-label-small">
-        <span className="box-border h-[15px] flex-none px-1 pt-[3px] text-left font-display text-[9px] leading-none">
-          {game.code}
-        </span>
+      <span className={`absolute flex flex-col overflow-hidden bg-cart-label ${sizing.label}`}>
+        <span className={`box-border flex-none text-left font-display leading-none ${sizing.code}`}>{game.code}</span>
         <span className="relative block flex-auto">
-          <CartridgeArt game={game} scanClass="[--scan:2px]" />
+          <span
+            className="absolute inset-0"
+            style={{ background: `linear-gradient(135deg, ${game.c1} 0 50%, ${game.c2} 50% 100%)` }}
+          />
+          <img
+            src={coverArtPath(game)}
+            alt=""
+            draggable={false}
+            className={`absolute inset-0 size-full object-cover ${COVER_CROP_POSITIONS[game.coverCrop ?? "center"]}`}
+          />
+          <span className={`scanlines absolute inset-0 ${sizing.scan}`} />
           {scoreText && (
-            <span className="absolute right-[3px] bottom-[3px] bg-ink px-[3px] pt-[3px] pb-0.5 font-display text-[9px] leading-none text-cream">
-              {scoreText}
-            </span>
+            <span className={`absolute bg-ink font-display leading-none text-cream ${sizing.badge}`}>{scoreText}</span>
           )}
         </span>
-        <span className="h-3 flex-none" />
+        {sizing.footer && footer && (
+          <span className={`box-border flex-none text-right font-display leading-none text-cart-meta ${sizing.footer}`}>
+            {footer}
+          </span>
+        )}
       </span>
     </span>
-  );
-}
-
-export function LargeCartridge({ game, footer }: { game: Game; footer: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      className="relative box-border h-[214px] w-[200px] flex-none rounded-[6px_6px_6px_20px] border-3 border-cart-edge bg-cart-shell shadow-cart-large"
-    >
-      <div className="absolute top-[9px] right-4 bottom-6 left-4 flex flex-col overflow-hidden rounded-[3px_3px_3px_8px] bg-cart-label shadow-cart-label-large">
-        <span className="box-border h-7 flex-none px-2 pt-[7px] font-display text-sm leading-none">{game.code}</span>
-        <div className="relative flex-auto">
-          <CartridgeArt game={game} scanClass="[--scan:3px]" />
-          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-ink/78 px-2 py-1.5 font-display text-[9px] leading-none whitespace-nowrap text-cream">
-            COVER ART
-          </span>
-        </div>
-        <span className="box-border h-[21px] flex-none px-2 pt-1.5 text-right font-display text-[8px] leading-none text-cart-meta">
-          {footer}
-        </span>
-      </div>
-    </div>
   );
 }

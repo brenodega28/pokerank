@@ -16,3 +16,14 @@ export function SiteHeader({ children }: { children?: ReactNode }) {
     </header>
   );
 }
+
+export function HeaderLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex min-h-12 items-center gap-2.5 border-3 border-ink-deep bg-cream px-4 font-display text-[11px] leading-[1.2] text-ink no-underline shadow-[inset_3px_3px_0_rgb(255_255_255/0.7),inset_-3px_-3px_0_rgb(0_0_0/0.16),4px_4px_0_var(--color-ink-deep)]"
+    >
+      {children}
+    </Link>
+  );
+}

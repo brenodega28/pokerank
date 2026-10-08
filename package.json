@@ -7,9 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "covers": "node --env-file=.env scripts/fetch-covers.mjs",
+    "deploy": "scripts/deploy.sh"
   },
   "dependencies": {
+    "html-to-image": "^1.11.13",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"

@@ -19,12 +19,21 @@ export function Panel({ as: Element = "div", className = "", frameClassName = ""
 
 const BUTTON_VARIANTS = {
   light: "bg-cream text-ink shadow-raised",
+  selected: "bg-highlight text-ink shadow-raised",
   highlight: "bg-highlight text-ink shadow-raised-highlight",
   accent: "bg-accent text-white shadow-raised-accent text-shadow-on-accent",
 } as const;
 
 export function pixelButtonClass(variant: keyof typeof BUTTON_VARIANTS = "light"): string {
   return `inline-flex min-h-11 items-center justify-center gap-2 border-3 border-ink px-3 font-display text-[10px] leading-[1.2] no-underline ${BUTTON_VARIANTS[variant]}`;
+}
+
+export function PixelCaret() {
+  return (
+    <svg width="8" height="14" viewBox="0 0 4 7" shapeRendering="crispEdges" aria-hidden="true">
+      <path fill="currentColor" d="M0 0h1v1h1v1h1v1h1v1h-1v1h-1v1h-1v1H0z" />
+    </svg>
+  );
 }
 
 export function PixelBackArrow() {

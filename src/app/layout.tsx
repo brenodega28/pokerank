@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Pixelify_Sans, Press_Start_2P } from "next/font/google";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 const pressStart = Press_Start_2P({
@@ -25,7 +26,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${pressStart.variable} ${pixelify.variable}`}>
       <body>
-        <div className="bg-grass-tiles min-h-screen">{children}</div>
+        <div className="bg-grass-tiles flex min-h-screen flex-col">
+          <div className="flex-1">{children}</div>
+          <SiteFooter />
+        </div>
       </body>
     </html>
   );

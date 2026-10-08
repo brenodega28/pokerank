@@ -63,6 +63,14 @@ describe("averages", () => {
     expect(formatAverage(null)).toBe("–");
   });
 
+  it("counts and averages all seven categories", () => {
+    const scores = parseScores({
+      hgss: { pokedex: 9, region: 10, story: 8, soundtrack: 10, progression: 8, difficulty: 8, graphics: 10 },
+    });
+    expect(scoredCategoryCount(scores, "hgss")).toBe(7);
+    expect(formatAverage(averageScore(scores, "hgss"))).toBe("9.0");
+  });
+
   it("clearScores removes every score for the game", () => {
     const scores = scored({ hgss: [9, 10, 8, 10], bw: [9, 8, 10, 10] });
     const cleared = clearScores(scores, "hgss");
@@ -106,7 +114,7 @@ describe("parseScores", () => {
 
   it("keeps only whole scores from 1 to 10 for known games and categories", () => {
     const parsed = parseScores({
-      hgss: { pokedex: 9, region: 11, story: 7.5, soundtrack: "10", graphics: 8 },
+      hgss: { pokedex: 9, region: 11, story: 7.5, soundtrack: "10", battles: 8 },
       bw: { story: 0 },
       missingno: { pokedex: 10 },
       e: { region: 1 },

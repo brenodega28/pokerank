@@ -1,4 +1,4 @@
-# Tierdex: design analysis and build plan
+# PokéRanked: design analysis and build plan
 
 Design source: [Pokémon Game Rankings canvas](https://claude.ai/artifact/M2rcM4ZgBjMCamMKAL2PGb)
 
@@ -32,44 +32,41 @@ There are no game images. Each game is drawn as a cartridge tile with two colour
 
 **Gaps the design doesn't cover:**
 
-- **Missing screens:** sign-in, account menu and sign-out, the public page a share link opens, and 404 or error states.
+- **Missing screens:** the read-only page a share link opens, and 404 or error states.
 - **Share dialog footer:** the name field we agreed on isn't drawn.
 - **Domain:** `[YOURSITE.COM]` needs the real domain.
 
 ## Decisions so far
 
-- **Data and login:** accounts in Postgres through Drizzle, with Auth.js email magic links.
-- **Guests:** they rank in localStorage, and their board is imported into the account when they sign in.
-- **Share links:** "Copy link" creates a short server link to a saved snapshot.
-- **Images:** share PNGs are made on the server with `next/og`.
+- **No accounts, databases or servers.** PokéRanked is a static site, and everything runs in the browser.
+- **Saving:** scores live in the browser's localStorage, so they stay on that device and browser.
+- **Share links:** "Copy link" encodes the scores in the URL itself. Opening the link shows a read-only copy of that board or game.
+- **Images:** share PNGs are made in the browser by rendering the 1080px card off-screen and capturing it.
 - **Share footer:** an optional name field.
-- **Hosting:** AWS.
+- **Hosting:** static files on AWS S3 behind CloudFront.
 
 ## Architecture
 
-- **Game catalogue:** a static TypeScript module (`src/data/games.ts`), not a database table. It rarely changes, and the server and the image renderer both need it.
-- **Tables:**
-  - The usual Auth.js tables: `users`, `accounts`, `sessions`, `verification_tokens`.
-  - `scores (user_id, game_id, category, score)`, with primary key `(user_id, game_id, category)` and `score` between 1 and 10. Tiers and averages are computed, not stored.
-  - `share_snapshots (slug, user_id?, kind 'board'|'game', category?, game_id?, payload jsonb, display_name?, created_at)`. The payload is frozen so the link keeps showing what was shared, even after later edits.
-- **Score logic:** pure functions for setting, clearing and averaging scores and grouping games into tiers. Both the board and the game page use them. A storage adapter saves to **localStorage** for guests and to **server actions** for signed-in users, with optimistic updates.
-- **Image routes:** `/s/[slug]/image.png` built with `next/og` (bundled TTF fonts, background tile in `public/`). The same image is the page's link preview. Download and Copy image both fetch this URL.
-- **Routes:** `/` (board), `/games/[id]`, `/s/[slug]` (read-only shared view), `/signin`, plus image routes.
-- **Email:** Amazon SES for the magic links.
+- **Game catalogue:** a static TypeScript module (`src/data/games.ts`).
+- **Score logic:** pure functions in `src/lib/scores.ts` for setting, clearing and averaging scores and grouping games into tiers. Both the board and the game page use them.
+- **Storage:** `src/lib/score-store.ts` keeps scores in localStorage and syncs open tabs.
+- **Static export:** Next.js builds plain HTML and assets with `output: "export"`. This needs `cacheComponents` and `partialPrefetching` removed from `next.config.ts`, because export mode can't run partial prerendering. A test build confirmed it produces `index.html`, one page per game and a `404.html`.
+- **Share links:** the board or game scores are compacted to one character per score in catalogue order (`1`–`9`, `a` for 10, `0` for no score) and put in the URL hash of `/share`, e.g. `/share#b=…` or `/share#g=hgss.9a8a`. The hash never reaches the host, and the page decodes it in the browser.
+- **Share images:** the 1080×1350 board card and 1080×1080 game card are React components rendered off-screen, then captured to PNG with a small library such as `html-to-image`. Download PNG saves that file, and Copy image puts it on the clipboard.
+- **Link previews:** with no server, a shared link can't carry a preview image of that person's scores. It gets the site's generic preview image instead.
+- **Routes:** `/` (board), `/games/[id]`, `/share` (read-only shared view).
 
 ## Phases
 
-1. **Foundations.** Add the design colours and fonts to the Tailwind theme, load the fonts with `next/font`, and put the background tile in `public/`. Build the shared pieces: Panel, PixelButton, TierButton, GameTile, ProgressBar. Add the game, category and tier data.
-2. **Tier board for guests.** Write the score logic with unit tests. Build the scoring panel, tier rows, unrated tray and progress bar, and save to localStorage. Check that it works at phone width.
-3. **Game page.** Build `/games/[id]` with per-category tier rows on the same state, and the header from the catalogue data.
-4. **Share cards.** Rebuild both cards in markup `next/og` can render (flexbox only) and match them against the 1080px artboards.
-5. **Database and sign-in.** Set up Docker Postgres locally, the Drizzle schema and migrations, and Auth.js with the Drizzle adapter and email sign-in. Then add the sign-in page and account menu, server actions for scores, and the guest-score import on first sign-in.
-6. **Sharing.** Build the share dialog with the name field. Creating a snapshot returns a slug, then Download, Copy image (via the clipboard API) and Copy link are wired up. Add the `/s/[slug]` page with link-preview tags, and rate-limit anonymous snapshot creation.
-7. **AWS deployment.** Set up RDS Postgres, verify the domain in SES, manage secrets, and run migrations in CI. The hosting service is still open: Amplify Hosting is simplest if it supports Next.js 16 at that point. Otherwise a standalone container on ECS Fargate is the dependable option.
-8. **QA.** Add Playwright tests for rank → sign in → share, compare the running app against the canvas, and check accessibility (contrast, keyboard use, `aria-pressed`).
+1. **Foundations.** Done: theme colours and fonts, background tile, shared panels, buttons, cartridges and progress bar, and the game, category and tier data.
+2. **Tier board.** Done: score logic with unit tests, scoring panel, tier rows, unrated tray and progress bar, saved to localStorage.
+3. **Game page.** Done: `/games/[id]` with per-category score bars on the same scores, and the header from the catalogue data.
+4. **Share cards.** Build both 1080px cards as components and match them against the artboards.
+5. **Sharing.** Build the share dialog with the name field. Add PNG capture for Download PNG and Copy image, the URL encoding for Copy link, and the read-only `/share` page.
+6. **Static export and AWS deployment.** Switch to `output: "export"` (removing `cacheComponents` and `partialPrefetching`), then publish the `out/` folder to an S3 bucket behind CloudFront. Configure CloudFront to serve `404.html` for missing pages and to map clean URLs like `/games/hgss` to their `.html` files.
+7. **QA.** Add Playwright tests for scoring, persistence and sharing, compare the running app against the canvas, and check accessibility (contrast, keyboard use, `aria-pressed`).
 
 ## Still open
 
-1. **Missing screens:** add the sign-in page, account menu and shared-link page to the canvas first, or build them in the same style straight away?
-2. **Domain:** what is the site's domain, for the card footer and SES?
-3. **AWS hosting:** pick one service now, or decide in phase 7?
+1. **Missing screens:** add the shared-link page and 404 page to the canvas first, or build them in the same style straight away?
+2. **Domain:** what is the site's domain, for the card footer and CloudFront?

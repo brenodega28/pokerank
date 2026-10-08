@@ -15,8 +15,8 @@ const pixelify = Pixelify_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Tierdex",
-    template: "%s · Tierdex",
+    default: "PokéRanked: my tier board",
+    template: "PokéRanked: %s",
   },
   description: "Rank every main-series Pokémon game by Pokédex, region, story and soundtrack.",
 };

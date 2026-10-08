@@ -6,6 +6,7 @@ import { GameTile } from "@/components/game-tile";
 import { OverallBadge, ScoreBar } from "@/components/score-bar";
 import { ShareDialog, type ShareDialogState } from "@/components/share-dialog";
 import { SiteHeader } from "@/components/site-header";
+import { SupportPanel } from "@/components/support-panel";
 import { CategoryChips, TierRows } from "@/components/tier-rows";
 import { Panel, ProgressBar, SectionLabel, pixelButtonClass } from "@/components/ui";
 import { CATEGORIES } from "@/data/categories";
@@ -91,6 +92,7 @@ export function TierBoard() {
             {unrated.length === 0 && <span className="self-center text-muted">Every game has a score!</span>}
           </div>
         </Panel>
+        <SupportPanel />
       </main>
       <ShareDialog state={share} scores={scores} onChange={setShare} onClose={() => setShare(null)} />
     </>

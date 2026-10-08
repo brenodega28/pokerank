@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Cartridge } from "@/components/cartridge";
 import { OverallBadge, ScoreBar, ScoreMeter } from "@/components/score-bar";
 import { ShareActions, ShareCardPreview, ShareNameField } from "@/components/share";
+import { SupportPanel } from "@/components/support-panel";
 import { Panel } from "@/components/ui";
 import { CATEGORIES, type CategoryId } from "@/data/categories";
 import { findGame, gameMetaLine, gameShortMetaLine, type Game } from "@/data/games";
@@ -131,6 +132,7 @@ export function GameDetail({ gameId }: { gameId: string }) {
         />
       </div>
       <GameSharePanel game={game} scores={scores} />
+      <SupportPanel frameClassName="min-w-0 flex-[1_1_100%]" />
     </main>
   );
 }

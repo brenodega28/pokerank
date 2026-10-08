@@ -64,7 +64,7 @@ There are no game images. Each game is drawn as a cartridge tile with two colour
 4. **Share cards.** Done: the 1080×1350 board card and 1080×1080 game card, built to the artboards. When a full board doesn't fit, the board card shrinks its cartridges in steps until it does.
 5. **Sharing.** Done: the share dialog on the board (Share board, and Share game from the scoring panel), the game page's share panel, an optional name saved in the browser, PNG download and Copy image via `html-to-image`, Copy link, and the read-only `/share` page with a message for broken links.
 6. **Static export and AWS deployment.** Built: `output: "export"`, Terraform for S3 + CloudFront + ACM (+ optional Route 53) in `infra/`, and `npm run deploy`. Not yet applied to an AWS account; see `infra/README.md`.
-7. **QA.** Add Playwright tests for scoring, persistence and sharing, compare the running app against the canvas, and check accessibility (contrast, keyboard use, `aria-pressed`).
+7. **QA.** Done: Playwright tests in `e2e/` (`npm run test:e2e`) for scoring, persistence, sharing and accessibility (axe WCAG A/AA, keyboard use, `aria-pressed`) on desktop and phone, and a pass against the canvas. Open findings: the scoring panel covers the whole screen on phones, the 404 page is the unstyled Next.js default, trailing-slash URLs 404 behind the CloudFront function, and the background differs from the canvas (to confirm).
 
 ## Still open
 

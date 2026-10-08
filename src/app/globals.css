@@ -21,6 +21,7 @@
   --color-highlight: #f8d030;
   --color-track: #e2e6d2;
   --color-track-active: #f4f0c4;
+  --color-unrated: #d0d0d8;
   --color-divider: #e0e0d4;
   --color-idle-border: #9898b0;
   --color-meter: #484860;
@@ -32,6 +33,7 @@
   --shadow-panel: inset 0 0 0 3px var(--color-cream), inset 0 0 0 6px var(--color-frame), 6px 6px 0 rgb(16 16 32 / 0.45);
   --shadow-raised: inset 3px 3px 0 rgb(255 255 255 / 0.7), inset -3px -3px 0 rgb(0 0 0 / 0.16), 3px 3px 0 rgb(16 16 32 / 0.35);
   --shadow-raised-accent: inset 3px 3px 0 rgb(255 255 255 / 0.3), inset -3px -3px 0 rgb(0 0 0 / 0.3), 3px 3px 0 rgb(16 16 32 / 0.35);
+  --shadow-raised-highlight: inset 3px 3px 0 rgb(255 255 255 / 0.6), inset -3px -3px 0 rgb(0 0 0 / 0.18), 3px 3px 0 rgb(16 16 32 / 0.35);
   --shadow-tile: 4px 4px 0 rgb(16 16 32 / 0.35);
   --shadow-selected: 0 0 0 3px var(--color-highlight), 0 0 0 6px var(--color-ink);
   --shadow-bevel: inset 3px 3px 0 rgb(255 255 255 / 0.45), inset -3px -3px 0 rgb(0 0 0 / 0.2);

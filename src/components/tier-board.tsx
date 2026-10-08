@@ -3,120 +3,91 @@
 import Link from "next/link";
 import { useState } from "react";
 import { GameTile } from "@/components/game-tile";
-import { Panel, PixelCaret, ProgressBar, SectionLabel, pixelButtonClass } from "@/components/ui";
-import { CATEGORIES, categoryLabel, type CategoryId } from "@/data/categories";
+import { OverallBadge, ScoreBar } from "@/components/score-bar";
+import { Panel, ProgressBar, SectionLabel, pixelButtonClass } from "@/components/ui";
+import { CATEGORIES } from "@/data/categories";
 import { GAMES, findGame, type Game } from "@/data/games";
-import { TIERS, type TierLetter } from "@/data/tiers";
-import { updateBoards, useBoards } from "@/lib/board-store";
-import { placeGame, rankedCount, tierOf, unrankedGameIds } from "@/lib/boards";
+import { MAX_SCORE, averageScore, clearScores, formatAverage, tierBoard, toggleScore, unratedGames, type Scores } from "@/lib/scores";
+import { updateScores, useScores } from "@/lib/score-store";
+import { TIERS, tierForScore } from "@/data/tiers";
 
 export function TierBoard() {
-  const boards = useBoards();
-  const [category, setCategory] = useState<CategoryId>("pokedex");
+  const scores = useScores();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const board = boards[category];
+  const board = tierBoard(scores);
+  const unrated = unratedGames(scores);
+  const ratedCount = GAMES.length - unrated.length;
   const selectedGame = selectedId ? findGame(selectedId) ?? null : null;
-  const ranked = rankedCount(board);
-  const unranked = unrankedGameIds(board);
+  const selectedAverage = selectedId ? averageScore(scores, selectedId) : null;
+  const selectedTier = selectedAverage === null ? null : tierForScore(selectedAverage).letter;
 
-  const toggleSelected = (gameId: string) => setSelectedId((current) => (current === gameId ? null : gameId));
-
-  const placeSelected = (tier: TierLetter | null) => {
-    if (!selectedId) return;
-    updateBoards((current) => placeGame(current, category, selectedId, tier));
-    setSelectedId(null);
-  };
-
-  const switchCategory = (next: CategoryId) => {
-    setCategory(next);
-    setSelectedId(null);
-  };
-
-  const renderTile = (gameId: string) => {
-    const game = findGame(gameId);
-    if (!game) return null;
-    return (
-      <GameTile
-        key={game.id}
-        game={game}
-        tier={tierOf(board, game.id)}
-        selected={selectedId === game.id}
-        onPick={() => toggleSelected(game.id)}
-      />
-    );
-  };
+  const renderTile = (game: Game, average: number | null) => (
+    <GameTile
+      key={game.id}
+      game={game}
+      average={average}
+      selected={selectedId === game.id}
+      onPick={() => setSelectedId((current) => (current === game.id ? null : game.id))}
+    />
+  );
 
   return (
     <>
       <Panel className="flex flex-wrap items-center justify-between gap-x-8 gap-y-[18px] px-6 py-5">
-        <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex min-w-0 flex-col gap-3.5">
           <SectionLabel>MY TIER BOARD</SectionLabel>
-          <h1 className="m-0 font-display text-[clamp(18px,2.6vw,30px)] leading-[1.35] font-normal uppercase">
-            Ranked by {categoryLabel(category)}
-          </h1>
+          <h1 className="m-0 font-display text-[clamp(18px,2.6vw,30px)] leading-[1.35] font-normal">OVERALL RANKING</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-base text-muted">Scored on</span>
+            {CATEGORIES.map((category) => (
+              <span
+                key={category.id}
+                className="box-border inline-flex min-h-[30px] items-center border-3 border-ink bg-track px-2 font-display text-[10px] leading-[1.2] uppercase"
+              >
+                {category.label}
+              </span>
+            ))}
+          </div>
         </div>
         <div className="flex w-[260px] max-w-full flex-col gap-2">
           <div className="flex justify-between gap-3 font-display text-[11px] leading-[1.3]">
-            <span>RANKED</span>
+            <span>RATED</span>
             <span>
-              {ranked}/{GAMES.length}
+              {ratedCount}/{GAMES.length}
             </span>
           </div>
-          <ProgressBar value={ranked} max={GAMES.length} label="Games ranked" />
+          <ProgressBar value={ratedCount} max={GAMES.length} label="Games rated" />
         </div>
       </Panel>
 
-      <Panel role="group" aria-label="Rank by" className="flex flex-wrap items-center gap-x-3 gap-y-2.5 px-4 py-3.5">
-        <SectionLabel className="pr-1.5 pl-1">RANK BY</SectionLabel>
-        {CATEGORIES.map((item) => {
-          const active = item.id === category;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => switchCategory(item.id)}
-              aria-pressed={active}
-              className={`${pixelButtonClass(active ? "selected" : "light", "medium")} uppercase`}
-            >
-              {active && <PixelCaret />}
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-      </Panel>
-
-      <PlacementBar
-        selectedGame={selectedGame}
-        currentTier={selectedId ? tierOf(board, selectedId) : null}
-        onPlace={placeSelected}
+      <ScoringPanel
+        game={selectedGame}
+        scores={scores}
+        average={selectedAverage}
+        onDone={() => setSelectedId(null)}
       />
 
       <Panel as="section" aria-label="Tier board" className="flex flex-col gap-2.5 p-4">
         {TIERS.map((tier) => {
-          const games = board[tier.letter];
+          const entries = board[tier.letter];
           return (
             <div key={tier.letter} className="flex min-h-[152px] gap-2.5">
-              <button
-                type="button"
-                onClick={() => placeSelected(tier.letter)}
-                disabled={!selectedGame}
-                aria-label={selectedGame ? `Place ${selectedGame.name} in ${tier.letter} tier` : `${tier.letter} tier`}
-                className="flex w-[clamp(56px,8vw,100px)] flex-none items-center justify-center border-3 border-ink p-0 font-display text-[clamp(22px,3vw,36px)] leading-none text-ink shadow-tier-label text-shadow-tier"
+              <div
+                className="flex w-[clamp(56px,8vw,100px)] flex-none flex-col items-center justify-center gap-3 border-3 border-ink text-ink shadow-tier-label"
                 style={{ background: tier.color }}
               >
-                {tier.letter}
-              </button>
+                <span className="font-display text-[clamp(22px,3vw,36px)] leading-none text-shadow-tier">{tier.letter}</span>
+                <span className="font-display text-[10px] leading-none">{tier.range}</span>
+              </div>
               <div
                 className={`flex min-w-0 flex-auto flex-wrap content-start items-stretch gap-2.5 border-3 border-ink p-2.5 shadow-well ${
-                  selectedGame ? "bg-track-active" : "bg-track"
+                  selectedTier === tier.letter ? "bg-track-active" : "bg-track"
                 }`}
               >
-                {games.map(renderTile)}
-                {games.length === 0 && (
-                  <span className="self-center px-1.5 text-base text-muted">
-                    {selectedGame ? `Tap ${tier.letter} to place it here` : "Nothing here yet"}
-                  </span>
+                {entries.map((entry) => renderTile(entry.game, entry.average))}
+                {entries.length === 0 && (
+                  <span className="self-center px-1.5 text-base text-muted">No games score here yet</span>
                 )}
               </div>
             </div>
@@ -124,70 +95,92 @@ export function TierBoard() {
         })}
       </Panel>
 
-      <Panel as="section" aria-labelledby="unranked-title" className="flex flex-col gap-3.5 px-4 pt-[18px] pb-4">
+      <Panel as="section" aria-labelledby="unrated-title" className="flex flex-col gap-3.5 px-4 pt-[18px] pb-4">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 px-1">
-          <h2 id="unranked-title" className="m-0 font-display text-[15px] leading-[1.3] font-normal">
-            NOT RANKED YET
+          <h2 id="unrated-title" className="m-0 font-display text-[15px] leading-[1.3] font-normal">
+            NOT RATED YET
           </h2>
-          <SectionLabel>{unranked.length} LEFT</SectionLabel>
+          <SectionLabel>{unrated.length} LEFT</SectionLabel>
         </div>
         <div className="flex min-h-[72px] flex-wrap items-stretch gap-2.5 border-3 border-ink bg-track p-3 shadow-well">
-          {unranked.map(renderTile)}
-          {unranked.length === 0 && <span className="self-center text-muted">Every game is on the board!</span>}
+          {unrated.map((game) => renderTile(game, null))}
+          {unrated.length === 0 && <span className="self-center text-muted">Every game has a score!</span>}
         </div>
       </Panel>
     </>
   );
 }
 
-type PlacementBarProps = {
-  selectedGame: Game | null;
-  currentTier: TierLetter | null;
-  onPlace: (tier: TierLetter | null) => void;
+type ScoringPanelProps = {
+  game: Game | null;
+  scores: Scores;
+  average: number | null;
+  onDone: () => void;
 };
 
-function PlacementBar({ selectedGame, currentTier, onPlace }: PlacementBarProps) {
+function ScoringPanel({ game, scores, average, onDone }: ScoringPanelProps) {
   return (
     <Panel className="sticky top-3 z-[5] box-border flex min-h-[84px] flex-wrap items-center gap-x-4 gap-y-3 py-4 pr-[18px] pl-[22px]">
-      {selectedGame ? (
-        <>
-          <span className="min-w-0 flex-[1_1_240px] text-[19px] leading-[1.35]">
-            Where should <strong className="font-bold text-accent">{selectedGame.name}</strong> go?
-          </span>
-          <div role="group" aria-label="Place in tier" className="flex flex-wrap gap-1.5">
-            {TIERS.map((tier) => {
-              const current = currentTier === tier.letter;
+      {game ? (
+        <div className="flex w-full flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3">
+            <span className="min-w-0 flex-[1_1_260px] text-[19px] leading-[1.35]">
+              How good is <strong className="font-bold text-accent">{game.name}</strong>?
+            </span>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-2.5 pr-2">
+                <span className="font-display text-[10px] leading-[1.2] text-muted">OVERALL</span>
+                <OverallBadge average={average} size="small" />
+                <span className="font-display text-sm leading-none">{formatAverage(average)}</span>
+              </div>
+              <Link href={`/games/${game.id}`} className={pixelButtonClass()}>
+                GAME PAGE
+              </Link>
+              <button type="button" onClick={onDone} className={pixelButtonClass("highlight")}>
+                DONE
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(440px,100%),1fr))] gap-x-7 gap-y-3.5">
+            {CATEGORIES.map((category) => {
+              const value = scores[game.id]?.[category.id];
               return (
-                <button
-                  key={tier.letter}
-                  type="button"
-                  onClick={() => onPlace(tier.letter)}
-                  aria-label={`Place in ${tier.letter} tier`}
-                  aria-pressed={current}
-                  className={`size-11 border-3 border-ink p-0 font-display text-sm leading-none text-ink ${
-                    current
-                      ? "shadow-[var(--shadow-bevel),var(--shadow-selected)]"
-                      : "shadow-[var(--shadow-bevel),3px_3px_0_rgb(16_16_32/0.35)]"
-                  }`}
-                  style={{ background: tier.color }}
-                >
-                  {tier.letter}
-                </button>
+                <div key={category.id} className="flex min-w-0 flex-col gap-2">
+                  <div className="flex justify-between gap-3 font-display text-[10px] leading-[1.3]">
+                    <span className="uppercase">{category.label}</span>
+                    <span>
+                      {value ?? "–"}/{MAX_SCORE}
+                    </span>
+                  </div>
+                  <ScoreBar
+                    label={category.label}
+                    value={value}
+                    onPick={(picked) => updateScores((all) => toggleScore(all, game.id, category.id, picked))}
+                  />
+                </div>
               );
             })}
-            <button type="button" onClick={() => onPlace(null)} className={pixelButtonClass()}>
-              UNRANK
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <span className="text-[15px] text-muted">
+              Overall is the average of the scores you set. Tap a box again to clear it.
+            </span>
+            <button
+              type="button"
+              onClick={() => updateScores((all) => clearScores(all, game.id))}
+              className={pixelButtonClass()}
+            >
+              CLEAR SCORES
             </button>
           </div>
-          <Link href={`/games/${selectedGame.id}`} className={pixelButtonClass()}>
-            GAME PAGE
-          </Link>
-        </>
+        </div>
       ) : (
         <span className="flex items-center gap-3 text-[19px] leading-[1.35]">
-          <span>Tap a game, then tap a tier to place it.</span>
+          <span>Tap a game to score it. It moves to its tier automatically.</span>
           <svg
-            className="text-accent motion-safe:animate-blink"
+            className="flex-none text-accent motion-safe:animate-blink"
             width="14"
             height="8"
             viewBox="0 0 7 4"

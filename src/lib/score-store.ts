@@ -1,29 +1,29 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { emptyBoards, parseBoards, type Boards } from "@/lib/boards";
+import { parseScores, type Scores } from "@/lib/scores";
 
-const STORAGE_KEY = "tierdex:boards:v1";
-const SERVER_SNAPSHOT = emptyBoards();
+const STORAGE_KEY = "tierdex:scores:v1";
+const SERVER_SNAPSHOT: Scores = {};
 
 const listeners = new Set<() => void>();
-let cachedBoards: Boards | null = null;
+let cachedScores: Scores | null = null;
 
-function readStoredBoards(): Boards {
+function readStoredScores(): Scores {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? parseBoards(JSON.parse(raw)) : emptyBoards();
+    return raw ? parseScores(JSON.parse(raw)) : {};
   } catch {
-    return emptyBoards();
+    return {};
   }
 }
 
-function getSnapshot(): Boards {
-  cachedBoards ??= readStoredBoards();
-  return cachedBoards;
+function getSnapshot(): Scores {
+  cachedScores ??= readStoredScores();
+  return cachedScores;
 }
 
-function getServerSnapshot(): Boards {
+function getServerSnapshot(): Scores {
   return SERVER_SNAPSHOT;
 }
 
@@ -33,7 +33,7 @@ function notify() {
 
 function handleStorage(event: StorageEvent) {
   if (event.key !== STORAGE_KEY) return;
-  cachedBoards = null;
+  cachedScores = null;
   notify();
 }
 
@@ -46,14 +46,14 @@ function subscribe(listener: () => void) {
   };
 }
 
-export function updateBoards(update: (boards: Boards) => Boards) {
-  cachedBoards = update(getSnapshot());
+export function updateScores(update: (scores: Scores) => Scores) {
+  cachedScores = update(getSnapshot());
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cachedBoards));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cachedScores));
   } catch {}
   notify();
 }
 
-export function useBoards(): Boards {
+export function useScores(): Scores {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }

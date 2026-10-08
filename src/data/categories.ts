@@ -14,7 +14,3 @@ export const CATEGORIES: readonly Category[] = [
   { id: "story", label: "Story", hint: "Plot, characters and pacing" },
   { id: "soundtrack", label: "Soundtrack", hint: "Music and sound" },
 ];
-
-export function categoryLabel(id: CategoryId): string {
-  return CATEGORIES.find((category) => category.id === id)?.label ?? id;
-}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LargeCartridge } from "@/components/cartridge";
-import { GameRatings, RatedBadge } from "@/components/game-ratings";
+import { GameScoreSummary, GameScores } from "@/components/game-scores";
 import { SiteHeader } from "@/components/site-header";
 import { Panel, PixelBackArrow } from "@/components/ui";
 import { GAMES, findGame, gameMetaLine } from "@/data/games";
@@ -34,20 +34,15 @@ export default async function GamePage({ params }: PageProps<"/games/[id]">) {
       <main className="mx-auto flex max-w-[1240px] flex-col gap-6 px-[clamp(16px,4vw,40px)] pt-8 pb-16">
         <Panel className="flex flex-wrap items-center gap-x-8 gap-y-6 p-6">
           <LargeCartridge game={game} />
-          <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-4">
+          <div className="flex min-w-0 flex-[1_1_300px] flex-col gap-4">
             <span className="font-display text-[11px] leading-[1.4] text-muted">{gameMetaLine(game)}</span>
             <h1 className="m-0 font-display text-[clamp(20px,2.8vw,32px)] leading-[1.4] font-normal uppercase">
               {game.name}
             </h1>
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex min-h-[34px] items-center border-3 border-ink bg-cream px-2.5 font-display text-[10px] leading-[1.2] uppercase">
-                {game.region}
-              </span>
-              <RatedBadge gameId={game.id} />
-            </div>
+            <GameScoreSummary gameId={game.id} region={game.region} />
           </div>
         </Panel>
-        <GameRatings gameId={game.id} />
+        <GameScores gameId={game.id} />
       </main>
     </>
   );

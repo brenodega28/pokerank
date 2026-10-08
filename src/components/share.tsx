@@ -1,7 +1,7 @@
 "use client";
 
 import { toBlob } from "html-to-image";
-import { useId, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { SHARE_CARD_SIZES, ShareBoardCard, ShareGameCard } from "@/components/share-cards";
 import type { Game } from "@/data/games";
 import type { Scores } from "@/lib/scores";
@@ -103,6 +103,24 @@ async function capturePng(node: HTMLElement): Promise<Blob> {
   return blob;
 }
 
+function shareText(target: ShareTarget): string {
+  return target.kind === "board" ? "My Pokémon game tier board" : `My ${target.game.name} scores`;
+}
+
+const subscribeToNothing = () => () => {};
+
+function useCanShareNatively(): boolean {
+  return useSyncExternalStore(
+    subscribeToNothing,
+    () => typeof navigator.share === "function",
+    () => false,
+  );
+}
+
+function isDomError(error: unknown, name: string): boolean {
+  return error instanceof DOMException && error.name === name;
+}
+
 type ShareActionsProps = {
   target: ShareTarget;
   scores: Scores;
@@ -119,14 +137,17 @@ export function ShareActions({ target, scores, cardRef }: ShareActionsProps) {
   const [status, setStatus] = useState<Status>(null);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
+  const canShareNatively = useCanShareNatively();
+  const preparedFile = useRef<{ name: string; file: File } | null>(null);
 
-  const run = async (action: () => Promise<string>, failure: string) => {
+  const run = async (action: () => Promise<string | null>, failure: string) => {
     if (busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
     setStatus(null);
     try {
-      setStatus({ message: await action(), tone: "success" });
+      const message = await action();
+      setStatus(message ? { message, tone: "success" } : null);
     } catch {
       setStatus({ message: failure, tone: "error" });
     } finally {
@@ -159,22 +180,55 @@ export function ShareActions({ target, scores, cardRef }: ShareActionsProps) {
       return "Picture copied to clipboard!";
     }, "Couldn't copy the picture. Try Download PNG instead.");
 
+  const shareUrl = () => {
+    const ranking: SharedRanking =
+      target.kind === "board"
+        ? { kind: "board", scores, name }
+        : { kind: "game", gameId: target.game.id, scores, name };
+    return `${window.location.origin}/share#${shareHash(ranking)}`;
+  };
+
   const copyLink = () =>
     run(async () => {
-      const ranking: SharedRanking =
-        target.kind === "board"
-          ? { kind: "board", scores, name }
-          : { kind: "game", gameId: target.game.id, scores, name };
-      await navigator.clipboard.writeText(`${window.location.origin}/share#${shareHash(ranking)}`);
+      await navigator.clipboard.writeText(shareUrl());
       return "Link copied!";
     }, "Couldn't copy the link.");
 
+  const shareNatively = () =>
+    run(async () => {
+      const prepared = preparedFile.current?.name === name ? preparedFile.current.file : null;
+      const file = prepared ?? new File([await capturePng(node())], shareFileName(target), { type: "image/png" });
+      const data: ShareData = { title: "PokéRanked", text: shareText(target), url: shareUrl() };
+      try {
+        await navigator.share(navigator.canShare?.({ files: [file] }) ? { ...data, files: [file] } : data);
+        return "Shared!";
+      } catch (error) {
+        if (isDomError(error, "AbortError")) return null;
+        if (!prepared && isDomError(error, "NotAllowedError")) {
+          preparedFile.current = { name, file };
+          return "Picture ready! Tap SHARE again.";
+        }
+        throw error;
+      }
+    }, "Couldn't open the share menu. Try Download PNG instead.");
+
   return (
     <div className="flex flex-col gap-2.5">
-      <button type="button" onClick={download} disabled={busy} className={downloadClass}>
-        DOWNLOAD PNG
-      </button>
+      {canShareNatively ? (
+        <button type="button" onClick={shareNatively} disabled={busy} className={downloadClass}>
+          SHARE
+        </button>
+      ) : (
+        <button type="button" onClick={download} disabled={busy} className={downloadClass}>
+          DOWNLOAD PNG
+        </button>
+      )}
       <div className="flex flex-wrap gap-2.5">
+        {canShareNatively && (
+          <button type="button" onClick={download} disabled={busy} className={secondaryClass}>
+            DOWNLOAD PNG
+          </button>
+        )}
         <button type="button" onClick={copyImage} disabled={busy} className={secondaryClass}>
           COPY IMAGE
         </button>

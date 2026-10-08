@@ -140,7 +140,7 @@ export function ShareBoardCard({ scores, name, cardRef }: ShareBoardCardProps) {
                 </div>
                 <div className="flex min-w-0 flex-auto flex-wrap content-start items-stretch gap-2 border-3 border-ink bg-track p-2.5 shadow-well">
                   {board[tier.letter].map(({ game, average }) => (
-                    <div key={game.id} className="flex w-[110px] flex-none flex-col gap-1.5 text-center" style={{ zoom }}>
+                    <div key={game.id} className="flex w-[94px] flex-none flex-col gap-1.5 text-center" style={{ zoom }}>
                       <Cartridge game={game} size="card" scoreText={formatAverage(average)} />
                       <span className="text-xs leading-[1.15]">{game.name}</span>
                     </div>

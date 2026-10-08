@@ -2,7 +2,7 @@ import { coverArtPath, type Game } from "@/data/games";
 
 const SIZES = {
   board: {
-    shell: "h-[133px] w-[124px] rounded-[4px_4px_4px_12px] border-2",
+    shell: "h-[113px] w-[105px] rounded-[4px_4px_4px_12px] border-2",
     shellShadow: "shadow-cart-small",
     label: "top-1 right-2 bottom-[13px] left-2 rounded-[2px_2px_2px_5px] shadow-cart-label-small",
     code: "h-[15px] px-1 pt-[3px] text-[9px]",
@@ -11,7 +11,7 @@ const SIZES = {
     footer: null,
   },
   card: {
-    shell: "h-[118px] w-[110px] rounded-[4px_4px_4px_11px] border-2",
+    shell: "h-[100px] w-[94px] rounded-[4px_4px_4px_11px] border-2",
     shellShadow: "shadow-cart-small",
     label: "top-1 right-[7px] bottom-[11px] left-[7px] rounded-[2px_2px_2px_5px] shadow-cart-label-small",
     code: "h-3.5 px-1 pt-[3px] text-[8px]",
@@ -20,7 +20,7 @@ const SIZES = {
     footer: null,
   },
   page: {
-    shell: "h-[246px] w-[230px] rounded-[6px_6px_6px_20px] border-3",
+    shell: "h-[209px] w-[196px] rounded-[6px_6px_6px_20px] border-3",
     shellShadow: "shadow-cart-large",
     label: "top-[9px] right-4 bottom-6 left-4 rounded-[3px_3px_3px_8px] shadow-cart-label-large",
     code: "h-7 px-2 pt-[7px] text-sm",
@@ -29,7 +29,7 @@ const SIZES = {
     footer: "h-[21px] px-2 pt-1.5 text-[8px]",
   },
   poster: {
-    shell: "h-[345px] w-[322px] rounded-[8px_8px_8px_28px] border-4",
+    shell: "h-[293px] w-[274px] rounded-[8px_8px_8px_28px] border-4",
     shellShadow: "shadow-cart-poster",
     label: "top-3 right-[22px] bottom-[34px] left-[22px] rounded-[4px_4px_4px_12px] shadow-cart-label-poster",
     code: "h-10 px-3 pt-2.5 text-[22px]",
@@ -40,9 +40,9 @@ const SIZES = {
 } as const;
 
 const COVER_CROP_POSITIONS = {
-  top: "object-top",
+  top: "object-[50%_25%]",
   center: "object-center",
-  bottom: "object-bottom",
+  bottom: "object-[50%_75%]",
 } as const;
 
 export type CartridgeSize = keyof typeof SIZES;

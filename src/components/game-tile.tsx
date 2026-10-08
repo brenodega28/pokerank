@@ -24,7 +24,7 @@ export function GameTile({ game, average, selected = false, onPick }: GameTilePr
       <span className="block px-0.5 text-[13px] leading-[1.15]">{game.name}</span>
     </>
   );
-  const layout = "flex w-[124px] flex-none flex-col gap-2 p-0 text-center text-ink";
+  const layout = "flex w-[105px] flex-none flex-col gap-2 p-0 text-center text-ink";
 
   if (!onPick) {
     return (

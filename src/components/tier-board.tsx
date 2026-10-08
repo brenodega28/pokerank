@@ -34,7 +34,7 @@ export function TierBoard() {
 
   return (
     <>
-      <Panel className="flex flex-wrap items-center justify-between gap-x-8 gap-y-[18px] px-6 py-5">
+      <Panel className="flex flex-wrap items-center justify-between gap-x-8 gap-y-[18px] px-[22px] py-[18px]">
         <div className="flex min-w-0 flex-col gap-3.5">
           <SectionLabel>MY TIER BOARD</SectionLabel>
           <h1 className="m-0 font-display text-[clamp(18px,2.6vw,30px)] leading-[1.35] font-normal">OVERALL RANKING</h1>
@@ -68,20 +68,20 @@ export function TierBoard() {
         onDone={() => setSelectedId(null)}
       />
 
-      <Panel as="section" aria-label="Tier board" className="flex flex-col gap-2.5 p-4">
+      <Panel as="section" aria-label="Tier board" className="flex flex-col gap-2.5 p-[clamp(8px,1.5vw,14px)]">
         {TIERS.map((tier) => {
           const entries = board[tier.letter];
           return (
             <div key={tier.letter} className="flex min-h-[152px] gap-2.5">
               <div
-                className="flex w-[clamp(56px,8vw,100px)] flex-none flex-col items-center justify-center gap-3 border-3 border-ink text-ink shadow-tier-label"
+                className="flex w-[clamp(44px,8vw,100px)] flex-none flex-col items-center justify-center gap-3 border-3 border-ink text-ink shadow-tier-label"
                 style={{ background: tier.color }}
               >
-                <span className="font-display text-[clamp(22px,3vw,36px)] leading-none text-shadow-tier">{tier.letter}</span>
+                <span className="font-display text-[clamp(18px,3vw,36px)] leading-none text-shadow-tier">{tier.letter}</span>
                 <span className="font-display text-[10px] leading-none">{tier.range}</span>
               </div>
               <div
-                className={`flex min-w-0 flex-auto flex-wrap content-start items-stretch gap-2.5 border-3 border-ink p-2.5 shadow-well ${
+                className={`flex min-w-0 flex-auto flex-wrap content-start items-stretch gap-x-2.5 gap-y-2 border-3 border-ink p-2.5 shadow-well ${
                   selectedTier === tier.letter ? "bg-track-active" : "bg-track"
                 }`}
               >
@@ -95,14 +95,14 @@ export function TierBoard() {
         })}
       </Panel>
 
-      <Panel as="section" aria-labelledby="unrated-title" className="flex flex-col gap-3.5 px-4 pt-[18px] pb-4">
+      <Panel as="section" aria-labelledby="unrated-title" className="flex flex-col gap-3.5 px-[clamp(8px,1.5vw,14px)] pt-4 pb-[clamp(8px,1.5vw,14px)]">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 px-1">
           <h2 id="unrated-title" className="m-0 font-display text-[15px] leading-[1.3] font-normal">
             NOT RATED YET
           </h2>
           <SectionLabel>{unrated.length} LEFT</SectionLabel>
         </div>
-        <div className="flex min-h-[72px] flex-wrap items-stretch gap-2.5 border-3 border-ink bg-track p-3 shadow-well">
+        <div className="flex min-h-[72px] flex-wrap items-stretch gap-x-2.5 gap-y-2 border-3 border-ink bg-track p-3 shadow-well">
           {unrated.map((game) => renderTile(game, null))}
           {unrated.length === 0 && <span className="self-center text-muted">Every game has a score!</span>}
         </div>
@@ -120,7 +120,10 @@ type ScoringPanelProps = {
 
 function ScoringPanel({ game, scores, average, onDone }: ScoringPanelProps) {
   return (
-    <Panel className="sticky top-3 z-[5] box-border flex min-h-[84px] flex-wrap items-center gap-x-4 gap-y-3 py-4 pr-[18px] pl-[22px]">
+    <Panel
+      frameClassName="sticky top-3 z-[5]"
+      className="box-border flex min-h-16 flex-wrap items-center gap-x-4 gap-y-3 py-3.5 pr-4 pl-5"
+    >
       {game ? (
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3">
@@ -142,7 +145,7 @@ function ScoringPanel({ game, scores, average, onDone }: ScoringPanelProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(440px,100%),1fr))] gap-x-7 gap-y-3.5">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-x-7 gap-y-3.5">
             {CATEGORIES.map((category) => {
               const value = scores[game.id]?.[category.id];
               return (

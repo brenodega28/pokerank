@@ -48,3 +48,7 @@ export function isGameId(id: string): boolean {
 export function gameMetaLine(game: Game): string {
   return `GEN ${game.gen} · ${game.platform.toUpperCase()} · ${game.year}`;
 }
+
+export function gameShortMetaLine(game: Game): string {
+  return `GEN ${game.gen} · ${game.year}`;
+}

@@ -5,7 +5,7 @@ import { LargeCartridge } from "@/components/cartridge";
 import { GameScoreSummary, GameScores } from "@/components/game-scores";
 import { SiteHeader } from "@/components/site-header";
 import { Panel, PixelBackArrow } from "@/components/ui";
-import { GAMES, findGame, gameMetaLine } from "@/data/games";
+import { GAMES, findGame, gameMetaLine, gameShortMetaLine } from "@/data/games";
 
 export function generateStaticParams() {
   return GAMES.map((game) => ({ id: game.id }));
@@ -32,8 +32,8 @@ export default async function GamePage({ params }: PageProps<"/games/[id]">) {
         </Link>
       </SiteHeader>
       <main className="mx-auto flex max-w-[1240px] flex-col gap-6 px-[clamp(16px,4vw,40px)] pt-8 pb-16">
-        <Panel className="flex flex-wrap items-center gap-x-8 gap-y-6 p-6">
-          <LargeCartridge game={game} />
+        <Panel className="flex flex-wrap items-center gap-x-8 gap-y-6 p-[22px]">
+          <LargeCartridge game={game} footer={gameShortMetaLine(game)} />
           <div className="flex min-w-0 flex-[1_1_300px] flex-col gap-4">
             <span className="font-display text-[11px] leading-[1.4] text-muted">{gameMetaLine(game)}</span>
             <h1 className="m-0 font-display text-[clamp(20px,2.8vw,32px)] leading-[1.4] font-normal uppercase">

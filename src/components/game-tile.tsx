@@ -1,4 +1,4 @@
-import { CartridgeArt } from "@/components/cartridge";
+import { SmallCartridge } from "@/components/cartridge";
 import type { Game } from "@/data/games";
 import { tierForScore } from "@/data/tiers";
 import { formatAverage } from "@/lib/scores";
@@ -19,11 +19,16 @@ export function GameTile({ game, average, selected, onPick }: GameTileProps) {
       onClick={onPick}
       aria-pressed={selected}
       aria-label={`${game.name}, ${description}`}
-      className={`flex w-[108px] flex-none flex-col border-3 border-ink bg-cream p-0 text-left text-ink transition-transform duration-[120ms] ease-[steps(2)] ${
-        selected ? "-translate-x-0.5 -translate-y-1 shadow-selected" : "shadow-tile"
+      className={`flex w-[108px] flex-none flex-col gap-2 border-0 bg-transparent p-0 text-center text-ink transition-transform duration-[120ms] ease-[steps(2)] ${
+        selected ? "-translate-x-0.5 -translate-y-1" : ""
       }`}
     >
-      <CartridgeArt game={game} size="small" scoreText={average === null ? undefined : formatAverage(average)} />
+      <SmallCartridge
+        game={game}
+        selected={selected}
+        scoreText={average === null ? undefined : formatAverage(average)}
+      />
+      <span className="block px-0.5 text-[13px] leading-[1.15]">{game.name}</span>
     </button>
   );
 }

@@ -1,56 +1,60 @@
 import type { Game } from "@/data/games";
 
-const SIZES = {
-  small: {
-    stripeBand: "h-7 border-b-3",
-    stripes: "left-2 top-[7px] h-3 [--stripe:3px]",
-    stripesRight: "right-2",
-    label: "m-1 gap-[5px] border-2 px-[5px] py-1.5",
-    code: "text-xs leading-[1.2]",
-    name: "text-[13px] leading-[1.15]",
-  },
-  large: {
-    stripeBand: "h-[72px] border-b-4",
-    stripes: "left-3.5 top-4 h-9 [--stripe:4px]",
-    stripesRight: "right-3.5",
-    label: "m-2 gap-2.5 border-3 p-3",
-    code: "text-[26px] leading-[1.1]",
-    name: "text-base leading-[1.2]",
-  },
-} as const;
-
-type CartridgeArtProps = {
-  game: Game;
-  size: keyof typeof SIZES;
-  scoreText?: string;
-};
-
-export function CartridgeArt({ game, size, scoreText }: CartridgeArtProps) {
-  const sizing = SIZES[size];
+function CartridgeArt({ game, scanClass }: { game: Game; scanClass: string }) {
   return (
     <>
-      <span className={`relative flex flex-none border-ink ${sizing.stripeBand}`}>
-        <span className="flex-1" style={{ background: game.c1 }} />
-        <span className="flex-1" style={{ background: game.c2 }} />
-        <span className={`stripes absolute ${sizing.stripes} ${scoreText ? "right-[46px]" : sizing.stripesRight}`} />
-        {scoreText && (
-          <span className="absolute top-[3px] right-[3px] bg-ink px-1 pt-1 pb-[3px] font-display text-[10px] leading-none text-cream">
-            {scoreText}
-          </span>
-        )}
-      </span>
-      <span className={`flex flex-auto flex-col border-label-border bg-paper ${sizing.label}`}>
-        <span className={`font-display ${sizing.code}`}>{game.code}</span>
-        <span className={`text-subtle ${sizing.name}`}>{game.name}</span>
-      </span>
+      <span
+        className="absolute inset-0"
+        style={{ background: `linear-gradient(135deg, ${game.c1} 0 50%, ${game.c2} 50% 100%)` }}
+      />
+      <span className={`scanlines absolute inset-0 ${scanClass}`} />
     </>
   );
 }
 
-export function LargeCartridge({ game }: { game: Game }) {
+export function SmallCartridge({ game, scoreText, selected }: { game: Game; scoreText?: string; selected: boolean }) {
   return (
-    <div aria-hidden="true" className="flex w-[200px] flex-none flex-col border-4 border-ink bg-cream shadow-[6px_6px_0_rgb(16_16_32/0.35)]">
-      <CartridgeArt game={game} size="large" />
+    <span
+      className={`relative box-border block h-[116px] w-[108px] flex-none rounded-[4px_4px_4px_12px] border-2 border-cart-edge bg-cart-shell ${
+        selected ? "shadow-cart-small-selected" : "shadow-cart-small"
+      }`}
+    >
+      <span className="absolute top-1 right-2 bottom-[13px] left-2 flex flex-col overflow-hidden rounded-[2px_2px_2px_5px] bg-cart-label shadow-cart-label-small">
+        <span className="box-border h-[15px] flex-none px-1 pt-[3px] text-left font-display text-[9px] leading-none">
+          {game.code}
+        </span>
+        <span className="relative block flex-auto">
+          <CartridgeArt game={game} scanClass="[--scan:2px]" />
+          {scoreText && (
+            <span className="absolute right-[3px] bottom-[3px] bg-ink px-[3px] pt-[3px] pb-0.5 font-display text-[9px] leading-none text-cream">
+              {scoreText}
+            </span>
+          )}
+        </span>
+        <span className="h-3 flex-none" />
+      </span>
+    </span>
+  );
+}
+
+export function LargeCartridge({ game, footer }: { game: Game; footer: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="relative box-border h-[214px] w-[200px] flex-none rounded-[6px_6px_6px_20px] border-3 border-cart-edge bg-cart-shell shadow-cart-large"
+    >
+      <div className="absolute top-[9px] right-4 bottom-6 left-4 flex flex-col overflow-hidden rounded-[3px_3px_3px_8px] bg-cart-label shadow-cart-label-large">
+        <span className="box-border h-7 flex-none px-2 pt-[7px] font-display text-sm leading-none">{game.code}</span>
+        <div className="relative flex-auto">
+          <CartridgeArt game={game} scanClass="[--scan:3px]" />
+          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-ink/78 px-2 py-1.5 font-display text-[9px] leading-none whitespace-nowrap text-cream">
+            COVER ART
+          </span>
+        </div>
+        <span className="box-border h-[21px] flex-none px-2 pt-1.5 text-right font-display text-[8px] leading-none text-cart-meta">
+          {footer}
+        </span>
+      </div>
     </div>
   );
 }

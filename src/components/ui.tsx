@@ -1,11 +1,20 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
-type PanelProps = ComponentPropsWithoutRef<"div"> & {
+type PanelProps = Omit<ComponentPropsWithoutRef<"div">, "className"> & {
   as?: "div" | "section" | "aside";
+  className?: string;
+  frameClassName?: string;
 };
 
-export function Panel({ as: Element = "div", className = "", ...props }: PanelProps) {
-  return <Element className={`border-4 border-ink bg-cream shadow-panel ${className}`} {...props} />;
+export function Panel({ as: Element = "div", className = "", frameClassName = "", children, ...props }: PanelProps) {
+  return (
+    <Element
+      className={`box-border rounded-[4px] border-4 border-card-edge bg-card-body py-1.5 pr-[clamp(16px,3vw,34px)] pl-3 shadow-card ${frameClassName}`}
+      {...props}
+    >
+      <div className={`rounded-[2px] bg-paper ${className}`}>{children}</div>
+    </Element>
+  );
 }
 
 const BUTTON_VARIANTS = {

@@ -37,7 +37,7 @@ export function GameScores({ gameId }: { gameId: string }) {
   const scores = useScores();
 
   return (
-    <Panel as="section" aria-labelledby="scores-title" className="flex flex-col p-2.5">
+    <Panel as="section" aria-labelledby="scores-title" className="flex flex-col p-2">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 px-3.5 pt-3.5 pb-3">
         <h2 id="scores-title" className="m-0 font-display text-[15px] leading-[1.3] font-normal">
           YOUR SCORES

@@ -10,10 +10,17 @@
   --color-ink-deep: #101020;
   --color-cream: #f8f8f0;
   --color-paper: #ffffff;
-  --color-frame: #8890c0;
+  --color-card-edge: #4a4242;
+  --color-card-body: #63636b;
+  --color-card-lip: #52525a;
+  --color-card-trim: #ffde6b;
+  --color-card-trim-edge: #efa539;
   --color-muted: #5a5a78;
   --color-subtle: #4a4a60;
-  --color-label-border: #c8c8b8;
+  --color-cart-shell: #45454e;
+  --color-cart-edge: #16161c;
+  --color-cart-label: #f4f2ea;
+  --color-cart-meta: #5a5a70;
   --color-night: #282840;
   --color-night-text: #c8c8e8;
   --color-accent: #c03030;
@@ -30,12 +37,15 @@
   --color-focus: #2f7bff;
   --color-grass: #7fcfac;
 
-  --shadow-panel: inset 0 0 0 3px var(--color-cream), inset 0 0 0 6px var(--color-frame), 6px 6px 0 rgb(16 16 32 / 0.45);
+  --shadow-card: inset 0 -2px 0 var(--color-card-trim-edge), inset 0 0 0 2px var(--color-card-trim), inset 0 -6px 0 var(--color-card-lip), 5px 5px 0 rgb(16 16 32 / 0.35);
   --shadow-raised: inset 3px 3px 0 rgb(255 255 255 / 0.7), inset -3px -3px 0 rgb(0 0 0 / 0.16), 3px 3px 0 rgb(16 16 32 / 0.35);
   --shadow-raised-accent: inset 3px 3px 0 rgb(255 255 255 / 0.3), inset -3px -3px 0 rgb(0 0 0 / 0.3), 3px 3px 0 rgb(16 16 32 / 0.35);
   --shadow-raised-highlight: inset 3px 3px 0 rgb(255 255 255 / 0.6), inset -3px -3px 0 rgb(0 0 0 / 0.18), 3px 3px 0 rgb(16 16 32 / 0.35);
-  --shadow-tile: 4px 4px 0 rgb(16 16 32 / 0.35);
-  --shadow-selected: 0 0 0 3px var(--color-highlight), 0 0 0 6px var(--color-ink);
+  --shadow-cart-small: inset 2px 2px 0 rgb(255 255 255 / 0.12), inset 0 -3px 0 rgb(0 0 0 / 0.3), 4px 4px 0 rgb(16 16 32 / 0.35);
+  --shadow-cart-small-selected: inset 2px 2px 0 rgb(255 255 255 / 0.12), inset 0 -3px 0 rgb(0 0 0 / 0.3), 0 0 0 3px var(--color-highlight), 0 0 0 5px var(--color-cart-edge), 6px 6px 0 rgb(16 16 32 / 0.35);
+  --shadow-cart-large: inset 3px 3px 0 rgb(255 255 255 / 0.12), inset 0 -5px 0 rgb(0 0 0 / 0.3), 6px 6px 0 rgb(16 16 32 / 0.35);
+  --shadow-cart-label-small: 0 0 0 2px #2e2e35, 0 0 0 3px #62626c;
+  --shadow-cart-label-large: 0 0 0 3px #2e2e35, 0 0 0 5px #62626c;
   --shadow-bevel: inset 3px 3px 0 rgb(255 255 255 / 0.45), inset -3px -3px 0 rgb(0 0 0 / 0.2);
   --shadow-tier-label: inset 5px 5px 0 rgb(255 255 255 / 0.4), inset -5px -5px 0 rgb(0 0 0 / 0.2);
   --shadow-well: inset 4px 4px 0 rgb(16 16 32 / 0.14);
@@ -67,8 +77,8 @@
   image-rendering: pixelated;
 }
 
-@utility stripes {
-  background: repeating-linear-gradient(to bottom, rgb(16 16 32 / 0.3) 0 var(--stripe, 3px), transparent var(--stripe, 3px) calc(var(--stripe, 3px) * 2));
+@utility scanlines {
+  background: repeating-linear-gradient(to bottom, rgb(16 16 32 / 0.14) 0 var(--scan, 2px), transparent var(--scan, 2px) calc(var(--scan, 2px) * 2));
 }
 
 @layer base {

@@ -27,7 +27,7 @@
   --color-meter-fill: #58d058;
   --color-meter-edge: #30a040;
   --color-focus: #2f7bff;
-  --color-grass: #78c060;
+  --color-grass: #7fcfac;
 
   --shadow-panel: inset 0 0 0 3px var(--color-cream), inset 0 0 0 6px var(--color-frame), 6px 6px 0 rgb(16 16 32 / 0.45);
   --shadow-raised: inset 3px 3px 0 rgb(255 255 255 / 0.7), inset -3px -3px 0 rgb(0 0 0 / 0.16), 3px 3px 0 rgb(16 16 32 / 0.35);
@@ -57,10 +57,10 @@
   }
 }
 
-@utility bg-overworld {
+@utility bg-grass-tiles {
   background-color: var(--color-grass);
-  background-image: url("/overworld.png");
-  background-size: 1536px 1536px;
+  background-image: url("/grass-tile.png");
+  background-size: 128px 376px;
   background-repeat: repeat;
   image-rendering: pixelated;
 }

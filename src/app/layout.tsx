@@ -25,7 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${pressStart.variable} ${pixelify.variable}`}>
       <body>
-        <div className="bg-overworld min-h-screen">{children}</div>
+        <div className="bg-grass-tiles min-h-screen">{children}</div>
       </body>
     </html>
   );

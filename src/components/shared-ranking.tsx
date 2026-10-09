@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { GameHero, GameScoresPanel } from "@/components/game-scores";
-import { CategoryChips, TierRows } from "@/components/tier-rows";
+import { ScoringSummary, TierRows } from "@/components/tier-rows";
 import { Panel, ProgressBar, SectionLabel, pixelButtonClass } from "@/components/ui";
 import { GAMES, findGame } from "@/data/games";
 import { unratedGames } from "@/lib/scores";
@@ -58,18 +58,23 @@ export function SharedRanking() {
         <SharedNotice>
           {sharedBy(ranking.name)} rating of {game.name}
         </SharedNotice>
-        <GameHero game={game} scores={ranking.scores} />
+        <GameHero game={game} scores={ranking.scores} mode={ranking.mode} />
         <GameScoresPanel
           game={game}
           scores={ranking.scores}
-          heading="THEIR SCORES"
-          subtitle="Scored from 1 to 10. The average sets its tier."
+          mode={ranking.mode}
+          heading={ranking.mode === "simple" ? "THEIR SCORE" : "THEIR SCORES"}
+          subtitle={
+            ranking.mode === "simple"
+              ? "One score from 1 to 5. It sets the tier directly."
+              : "Scored from 1 to 5. The average sets its tier."
+          }
         />
       </>
     );
   }
 
-  const rated = GAMES.length - unratedGames(ranking.scores).length;
+  const rated = GAMES.length - unratedGames(ranking.scores, ranking.mode).length;
   return (
     <>
       <Panel className="flex flex-wrap items-center justify-between gap-x-8 gap-y-[18px] px-[22px] py-[18px]">
@@ -78,7 +83,7 @@ export function SharedRanking() {
           <h1 className="m-0 font-display text-[clamp(18px,2.6vw,30px)] leading-[1.35] font-normal">
             {sharedBy(ranking.name).toUpperCase()} RANKING
           </h1>
-          <CategoryChips />
+          <ScoringSummary mode={ranking.mode} />
         </div>
         <div className="flex w-[260px] max-w-full flex-col gap-2">
           <div className="flex justify-between gap-3 font-display text-[11px] leading-[1.3]">
@@ -90,7 +95,7 @@ export function SharedRanking() {
           <ProgressBar value={rated} max={GAMES.length} label="Games rated" />
         </div>
       </Panel>
-      <TierRows scores={ranking.scores} label="Shared tier board" />
+      <TierRows scores={ranking.scores} mode={ranking.mode} label="Shared tier board" />
     </>
   );
 }

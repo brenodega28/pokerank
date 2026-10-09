@@ -33,3 +33,15 @@ variable "price_class" {
   type        = string
   default     = "PriceClass_100"
 }
+
+variable "github_repository" {
+  description = "GitHub repository (owner/name) allowed to deploy through the OIDC role."
+  type        = string
+  default     = "brenodega28/pokerank"
+}
+
+variable "github_deploy_branch" {
+  description = "Branch whose workflows may assume the deploy role."
+  type        = string
+  default     = "main"
+}

@@ -1,17 +1,26 @@
 import type { Page } from "@playwright/test";
-import type { Scores } from "@/lib/scores";
+import type { Scores, ScoringMode } from "@/lib/scores";
 
-export const SCORES_KEY = "tierdex:scores:v1";
+export const SCORES_KEY = "pokeranked:scores:v2";
+export const MODE_KEY = "pokeranked:mode:v1";
 
-export const HGSS_SCORES = { pokedex: 9, region: 10, story: 8, soundtrack: 10, progression: 8, difficulty: 8, graphics: 10 };
+export const HGSS_SCORES = { pokedex: 5, region: 5, story: 4, soundtrack: 5, progression: 4, difficulty: 4, graphics: 5 };
 
-export async function seedScores(page: Page, scores: Scores) {
+async function seed(page: Page, key: string, value: unknown) {
   await page.addInitScript(
-    ([key, value]) => {
-      if (!window.localStorage.getItem(key)) window.localStorage.setItem(key, value);
+    ([storageKey, stored]) => {
+      if (!window.localStorage.getItem(storageKey)) window.localStorage.setItem(storageKey, stored);
     },
-    [SCORES_KEY, JSON.stringify(scores)] as const,
+    [key, JSON.stringify(value)] as const,
   );
+}
+
+export function seedScores(page: Page, scores: Partial<Scores>) {
+  return seed(page, SCORES_KEY, scores);
+}
+
+export function seedMode(page: Page, mode: ScoringMode) {
+  return seed(page, MODE_KEY, mode);
 }
 
 export function storedScores(page: Page): Promise<Scores> {
@@ -22,6 +31,10 @@ export function gameTile(page: Page, name: string) {
   return page.getByRole("button", { name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")},`) });
 }
 
-export function scoreBox(page: Page, category: string, value: number) {
-  return page.getByRole("button", { name: `${category}: ${value} out of 10`, exact: true });
+export function scoreBox(page: Page, label: string, value: number) {
+  return page.getByRole("button", { name: `${label}: ${value} out of 5`, exact: true });
+}
+
+export function modeButton(page: Page, mode: "SIMPLE" | "ADVANCED") {
+  return page.getByRole("group", { name: "Scoring mode" }).getByRole("button", { name: mode });
 }

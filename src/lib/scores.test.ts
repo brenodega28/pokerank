@@ -1,124 +1,174 @@
 import { describe, expect, it } from "vitest";
 import { GAMES } from "@/data/games";
-import { tierForScore } from "@/data/tiers";
+import { TIERS, tierForScore } from "@/data/tiers";
 import {
-  averageScore,
+  NO_SCORES,
   clearScores,
-  formatAverage,
+  formatScore,
+  overallScore,
   parseScores,
   scoredCategoryCount,
   tierBoard,
-  toggleScore,
+  tierRange,
+  toggleCategoryScore,
+  toggleSimpleScore,
   unratedGames,
   type Scores,
 } from "@/lib/scores";
 
-function scored(entries: Record<string, [number, number, number, number]>): Scores {
-  return Object.fromEntries(
-    Object.entries(entries).map(([id, [pokedex, region, story, soundtrack]]) => [id, { pokedex, region, story, soundtrack }]),
-  );
+function advanced(entries: Record<string, [number, number, number, number]>): Scores {
+  return {
+    simple: {},
+    advanced: Object.fromEntries(
+      Object.entries(entries).map(([id, [pokedex, region, story, soundtrack]]) => [id, { pokedex, region, story, soundtrack }]),
+    ),
+  };
 }
 
 describe("tierForScore", () => {
   it.each([
-    [10, "S"],
-    [9, "S"],
-    [8.99, "A"],
-    [8, "A"],
-    [7.25, "B"],
-    [5, "C"],
-    [4.9, "D"],
+    [5, "S"],
+    [4.5, "S"],
+    [4.49, "A"],
+    [4, "A"],
+    [3.25, "B"],
+    [2, "C"],
+    [1.9, "D"],
     [1, "D"],
   ])("puts %d in %s", (score, letter) => {
     expect(tierForScore(score).letter).toBe(letter);
   });
+
+  it("gives each whole simple score its own tier", () => {
+    expect([5, 4, 3, 2, 1].map((score) => tierForScore(score).letter)).toEqual(["S", "A", "B", "C", "D"]);
+    expect(TIERS.map((tier) => tierRange(tier, "simple"))).toEqual(["5", "4", "3", "2", "1"]);
+    expect(TIERS.map((tier) => tierRange(tier, "advanced"))).toEqual(["4.5+", "4+", "3+", "2+", "<2"]);
+  });
 });
 
-describe("toggleScore", () => {
+describe("toggleCategoryScore", () => {
   it("sets a score, replaces it, and clears it when the same value is picked again", () => {
-    const set = toggleScore({}, "hgss", "story", 8);
-    expect(set.hgss).toEqual({ story: 8 });
-    const replaced = toggleScore(set, "hgss", "story", 6);
-    expect(replaced.hgss).toEqual({ story: 6 });
-    const cleared = toggleScore(replaced, "hgss", "story", 6);
-    expect(cleared.hgss).toEqual({});
+    const set = toggleCategoryScore(NO_SCORES, "hgss", "story", 4);
+    expect(set.advanced.hgss).toEqual({ story: 4 });
+    const replaced = toggleCategoryScore(set, "hgss", "story", 3);
+    expect(replaced.advanced.hgss).toEqual({ story: 3 });
+    const cleared = toggleCategoryScore(replaced, "hgss", "story", 3);
+    expect(cleared.advanced.hgss).toEqual({});
   });
 
-  it("keeps other categories and games untouched", () => {
-    const before = toggleScore(toggleScore({}, "bw", "region", 9), "hgss", "story", 8);
-    const after = toggleScore(before, "hgss", "pokedex", 10);
-    expect(after.hgss).toEqual({ story: 8, pokedex: 10 });
-    expect(after.bw).toBe(before.bw);
-    expect(before.hgss).toEqual({ story: 8 });
+  it("keeps other categories, games and the simple scores untouched", () => {
+    const before = toggleCategoryScore(toggleSimpleScore(NO_SCORES, "bw", 5), "hgss", "story", 4);
+    const after = toggleCategoryScore(before, "hgss", "pokedex", 5);
+    expect(after.advanced.hgss).toEqual({ story: 4, pokedex: 5 });
+    expect(after.simple).toBe(before.simple);
+    expect(before.advanced.hgss).toEqual({ story: 4 });
   });
 });
 
-describe("averages", () => {
-  it("averages only the categories that have a score", () => {
-    const scores = toggleScore(toggleScore({}, "e", "pokedex", 9), "e", "story", 6);
-    expect(averageScore(scores, "e")).toBe(7.5);
+describe("toggleSimpleScore", () => {
+  it("sets, replaces and clears one score per game without touching advanced scores", () => {
+    const start = toggleCategoryScore(NO_SCORES, "e", "region", 2);
+    const set = toggleSimpleScore(start, "e", 4);
+    expect(set.simple).toEqual({ e: 4 });
+    expect(set.advanced).toBe(start.advanced);
+    expect(toggleSimpleScore(set, "e", 2).simple).toEqual({ e: 2 });
+    expect(toggleSimpleScore(set, "e", 4).simple).toEqual({});
+  });
+});
+
+describe("overallScore", () => {
+  it("uses the single score in simple mode", () => {
+    const scores = toggleCategoryScore(toggleSimpleScore(NO_SCORES, "e", 3), "e", "story", 5);
+    expect(overallScore(scores, "simple", "e")).toBe(3);
+    expect(overallScore(scores, "simple", "rb")).toBeNull();
+    expect(formatScore(3, "simple")).toBe("3");
+  });
+
+  it("averages only the categories that have a score in advanced mode", () => {
+    const scores = toggleCategoryScore(toggleCategoryScore(NO_SCORES, "e", "pokedex", 5), "e", "story", 2);
+    expect(overallScore(scores, "advanced", "e")).toBe(3.5);
     expect(scoredCategoryCount(scores, "e")).toBe(2);
-    expect(averageScore(scores, "rb")).toBeNull();
-    expect(formatAverage(averageScore(scores, "e"))).toBe("7.5");
-    expect(formatAverage(null)).toBe("–");
+    expect(overallScore(scores, "advanced", "rb")).toBeNull();
+    expect(formatScore(3.5, "advanced")).toBe("3.5");
+    expect(formatScore(4, "advanced")).toBe("4.0");
+    expect(formatScore(null, "advanced")).toBe("–");
   });
 
   it("counts and averages all seven categories", () => {
     const scores = parseScores({
-      hgss: { pokedex: 9, region: 10, story: 8, soundtrack: 10, progression: 8, difficulty: 8, graphics: 10 },
+      advanced: { hgss: { pokedex: 5, region: 5, story: 4, soundtrack: 5, progression: 4, difficulty: 4, graphics: 5 } },
     });
     expect(scoredCategoryCount(scores, "hgss")).toBe(7);
-    expect(formatAverage(averageScore(scores, "hgss"))).toBe("9.0");
+    expect(formatScore(overallScore(scores, "advanced", "hgss"), "advanced")).toBe("4.6");
   });
+});
 
-  it("clearScores removes every score for the game", () => {
-    const scores = scored({ hgss: [9, 10, 8, 10], bw: [9, 8, 10, 10] });
-    const cleared = clearScores(scores, "hgss");
-    expect(averageScore(cleared, "hgss")).toBeNull();
-    expect(cleared.bw).toBe(scores.bw);
+describe("clearScores", () => {
+  it("removes the game's scores for the current mode only", () => {
+    const scores = { ...advanced({ hgss: [5, 5, 4, 5], bw: [5, 4, 5, 5] }), simple: { hgss: 5 } };
+    const clearedAdvanced = clearScores(scores, "advanced", "hgss");
+    expect(overallScore(clearedAdvanced, "advanced", "hgss")).toBeNull();
+    expect(clearedAdvanced.advanced.bw).toBe(scores.advanced.bw);
+    expect(clearedAdvanced.simple).toBe(scores.simple);
+
+    const clearedSimple = clearScores(scores, "simple", "hgss");
+    expect(clearedSimple.simple).toEqual({});
+    expect(clearedSimple.advanced).toBe(scores.advanced);
   });
 });
 
 describe("tierBoard", () => {
   it("groups games by average tier, best first, ties in catalogue order", () => {
-    const board = tierBoard(
-      scored({
-        hgss: [9, 10, 8, 10],
-        bw: [9, 8, 10, 10],
-        pt: [9, 9, 8, 9],
-        e: [8, 9, 7, 9],
-        gs: [8, 9, 7, 9],
-        lgpe: [4, 5, 3, 5],
-      }),
-    );
+    const scores = advanced({
+      hgss: [5, 5, 4, 5],
+      bw: [5, 4, 5, 4],
+      pt: [4, 5, 4, 4],
+      e: [4, 4, 4, 4],
+      gs: [4, 4, 4, 4],
+      lgpe: [1, 2, 1, 2],
+    });
+    const board = tierBoard(scores, "advanced");
     expect(board.S.map((entry) => entry.game.id)).toEqual(["hgss", "bw"]);
     expect(board.A.map((entry) => entry.game.id)).toEqual(["pt", "gs", "e"]);
     expect(board.B).toEqual([]);
-    expect(board.D.map((entry) => [entry.game.id, entry.average])).toEqual([["lgpe", 4.25]]);
+    expect(board.D.map((entry) => [entry.game.id, entry.score])).toEqual([["lgpe", 1.5]]);
+    expect(tierBoard(scores, "simple").S).toEqual([]);
   });
 
-  it("leaves games without scores in the unrated list", () => {
-    const scores = scored({ rb: [8, 7, 5, 9] });
-    const unrated = unratedGames(scores);
-    expect(unrated).toHaveLength(GAMES.length - 1);
-    expect(unrated.map((game) => game.id)).not.toContain("rb");
+  it("puts each simple score straight into its tier", () => {
+    const board = tierBoard({ simple: { rb: 5, bw: 5, e: 3, lgpe: 1 }, advanced: {} }, "simple");
+    expect(board.S.map((entry) => entry.game.id)).toEqual(["rb", "bw"]);
+    expect(board.B.map((entry) => entry.game.id)).toEqual(["e"]);
+    expect(board.D.map((entry) => entry.game.id)).toEqual(["lgpe"]);
+  });
+
+  it("leaves games without scores in the unrated list for that mode", () => {
+    const scores = { ...advanced({ rb: [4, 4, 3, 5] }), simple: { e: 2, bw: 4 } };
+    expect(unratedGames(scores, "advanced")).toHaveLength(GAMES.length - 1);
+    expect(unratedGames(scores, "advanced").map((game) => game.id)).not.toContain("rb");
+    expect(unratedGames(scores, "simple")).toHaveLength(GAMES.length - 2);
+    expect(unratedGames(scores, "simple").map((game) => game.id)).toContain("rb");
   });
 });
 
 describe("parseScores", () => {
   it("falls back to no scores for junk", () => {
-    expect(parseScores(null)).toEqual({});
-    expect(parseScores("nope")).toEqual({});
-    expect(parseScores([1, 2])).toEqual({});
+    expect(parseScores(null)).toEqual(NO_SCORES);
+    expect(parseScores("nope")).toEqual(NO_SCORES);
+    expect(parseScores([1, 2])).toEqual(NO_SCORES);
+    expect(parseScores({ simple: [3], advanced: "x" })).toEqual(NO_SCORES);
   });
 
-  it("keeps only whole scores from 1 to 10 for known games and categories", () => {
+  it("keeps only whole scores from 1 to 5 for known games and categories", () => {
     const parsed = parseScores({
-      hgss: { pokedex: 9, region: 11, story: 7.5, soundtrack: "10", battles: 8 },
-      bw: { story: 0 },
-      missingno: { pokedex: 10 },
-      e: { region: 1 },
+      simple: { rb: 5, y: 6, c: 2.5, e: "3", missingno: 4, gs: 1 },
+      advanced: {
+        hgss: { pokedex: 5, region: 6, story: 3.5, soundtrack: "5", battles: 4 },
+        bw: { story: 0 },
+        missingno: { pokedex: 5 },
+        e: { region: 1 },
+      },
     });
-    expect(parsed).toEqual({ hgss: { pokedex: 9 }, e: { region: 1 } });
+    expect(parsed).toEqual({ simple: { rb: 5, gs: 1 }, advanced: { hgss: { pokedex: 5 }, e: { region: 1 } } });
   });
 });

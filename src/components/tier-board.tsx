@@ -2,29 +2,41 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { GameTile } from "@/components/game-tile";
+import { GameTile, tileListClass } from "@/components/game-tile";
+import { ModeToggle } from "@/components/mode-toggle";
 import { OverallBadge, ScoreBar } from "@/components/score-bar";
 import { ShareDialog, type ShareDialogState } from "@/components/share-dialog";
 import { SiteHeader } from "@/components/site-header";
 import { SupportPanel } from "@/components/support-panel";
-import { CategoryChips, TierRows } from "@/components/tier-rows";
+import { ScoringSummary, TierRows } from "@/components/tier-rows";
 import { Panel, ProgressBar, SectionLabel, pixelButtonClass } from "@/components/ui";
 import { CATEGORIES } from "@/data/categories";
 import { GAMES, findGame, type Game } from "@/data/games";
 import { tierForScore } from "@/data/tiers";
-import { MAX_SCORE, averageScore, clearScores, formatAverage, toggleScore, unratedGames, type Scores } from "@/lib/scores";
-import { updateScores, useScores } from "@/lib/score-store";
+import {
+  MAX_SCORE,
+  clearScores,
+  formatScore,
+  overallScore,
+  toggleCategoryScore,
+  toggleSimpleScore,
+  unratedGames,
+  type Scores,
+  type ScoringMode,
+} from "@/lib/scores";
+import { updateScores, useScores, useScoringMode } from "@/lib/score-store";
 
 export function TierBoard() {
   const scores = useScores();
+  const mode = useScoringMode();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [share, setShare] = useState<ShareDialogState | null>(null);
 
-  const unrated = unratedGames(scores);
+  const unrated = unratedGames(scores, mode);
   const ratedCount = GAMES.length - unrated.length;
   const selectedGame = selectedId ? findGame(selectedId) ?? null : null;
-  const selectedAverage = selectedId ? averageScore(scores, selectedId) : null;
-  const selectedTier = selectedAverage === null ? null : tierForScore(selectedAverage).letter;
+  const selectedScore = selectedId ? overallScore(scores, mode, selectedId) : null;
+  const selectedTier = selectedScore === null ? null : tierForScore(selectedScore).letter;
   const togglePick = (gameId: string) => setSelectedId((current) => (current === gameId ? null : gameId));
 
   return (
@@ -39,7 +51,8 @@ export function TierBoard() {
           <div className="flex min-w-0 flex-col gap-3.5">
             <SectionLabel>MY TIER BOARD</SectionLabel>
             <h1 className="m-0 font-display text-[clamp(18px,2.6vw,30px)] leading-[1.35] font-normal">OVERALL RANKING</h1>
-            <CategoryChips />
+            <ModeToggle />
+            <ScoringSummary mode={mode} switchHint />
           </div>
           <div className="flex w-[260px] max-w-full flex-col gap-2">
             <div className="flex justify-between gap-3 font-display text-[11px] leading-[1.3]">
@@ -55,13 +68,15 @@ export function TierBoard() {
         <ScoringPanel
           game={selectedGame}
           scores={scores}
-          average={selectedAverage}
+          mode={mode}
+          score={selectedScore}
           onShare={(gameId) => setShare({ kind: "game", gameId })}
           onDone={() => setSelectedId(null)}
         />
 
         <TierRows
           scores={scores}
+          mode={mode}
           label="Tier board"
           selectedId={selectedId}
           highlightTier={selectedTier}
@@ -79,22 +94,23 @@ export function TierBoard() {
             </h2>
             <SectionLabel>{unrated.length} LEFT</SectionLabel>
           </div>
-          <div className="flex min-h-[72px] flex-wrap items-stretch gap-x-2.5 gap-y-2 border-3 border-ink bg-track p-3 shadow-well">
+          <div className={`${tileListClass} min-h-[72px] border-3 border-ink bg-track p-3 shadow-well`}>
             {unrated.map((game) => (
               <GameTile
                 key={game.id}
                 game={game}
-                average={null}
+                score={null}
+                mode={mode}
                 selected={selectedId === game.id}
                 onPick={() => togglePick(game.id)}
               />
             ))}
-            {unrated.length === 0 && <span className="self-center text-muted">Every game has a score!</span>}
+            {unrated.length === 0 && <span className="col-span-full self-center text-muted">Every game has a score!</span>}
           </div>
         </Panel>
         <SupportPanel />
       </main>
-      <ShareDialog state={share} scores={scores} onChange={setShare} onClose={() => setShare(null)} />
+      <ShareDialog state={share} scores={scores} mode={mode} onChange={setShare} onClose={() => setShare(null)} />
     </>
   );
 }
@@ -105,12 +121,13 @@ const headerShareClass =
 type ScoringPanelProps = {
   game: Game | null;
   scores: Scores;
-  average: number | null;
+  mode: ScoringMode;
+  score: number | null;
   onShare: (gameId: string) => void;
   onDone: () => void;
 };
 
-function ScoringPanel({ game, scores, average, onShare, onDone }: ScoringPanelProps) {
+function ScoringPanel({ game, scores, mode, score, onShare, onDone }: ScoringPanelProps) {
   return (
     <Panel
       frameClassName="sticky top-3 z-[5] max-h-[calc(100dvh-24px)] overflow-y-auto overscroll-contain"
@@ -125,8 +142,10 @@ function ScoringPanel({ game, scores, average, onShare, onDone }: ScoringPanelPr
             <div className="flex flex-wrap items-center gap-2.5">
               <div className="flex items-center gap-2.5 pr-2">
                 <span className="font-display text-[10px] leading-[1.2] text-muted">OVERALL</span>
-                <OverallBadge average={average} size="small" />
-                <span className="font-display text-sm leading-none">{formatAverage(average)}</span>
+                <OverallBadge score={score} size="small" />
+                <span className="font-display text-sm leading-none">
+                  {score === null ? "–" : `${formatScore(score, mode)}/${MAX_SCORE}`}
+                </span>
               </div>
               <Link href={`/games/${game.id}`} className={pixelButtonClass()}>
                 GAME PAGE
@@ -141,36 +160,37 @@ function ScoringPanel({ game, scores, average, onShare, onDone }: ScoringPanelPr
           </div>
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-x-7 gap-y-3.5">
-            {CATEGORIES.map((category) => {
-              const value = scores[game.id]?.[category.id];
-              return (
-                <div key={category.id} className="flex min-w-0 flex-col gap-2">
-                  <div className="flex justify-between gap-3 font-display text-[10px] leading-[1.3]">
-                    <span className="uppercase">{category.label}</span>
-                    <span>
-                      {value ?? "–"}/{MAX_SCORE}
-                    </span>
-                  </div>
-                  <ScoreBar
-                    label={category.label}
-                    value={value}
-                    onPick={(picked) => updateScores((all) => toggleScore(all, game.id, category.id, picked))}
-                  />
-                </div>
-              );
-            })}
+            {mode === "simple" ? (
+              <ScoreRow
+                label="Score"
+                value={scores.simple[game.id]}
+                numbered
+                onPick={(picked) => updateScores((all) => toggleSimpleScore(all, game.id, picked))}
+              />
+            ) : (
+              CATEGORIES.map((category) => (
+                <ScoreRow
+                  key={category.id}
+                  label={category.label}
+                  value={scores.advanced[game.id]?.[category.id]}
+                  onPick={(picked) => updateScores((all) => toggleCategoryScore(all, game.id, category.id, picked))}
+                />
+              ))
+            )}
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <span className="text-[15px] text-muted">
-              Overall is the average of the scores you set. Tap a box again to clear it.
+              {mode === "simple"
+                ? "Its tier comes straight from this score. Tap a box again to clear it."
+                : "Overall is the average of the scores you set. Tap a box again to clear it."}
             </span>
             <button
               type="button"
-              onClick={() => updateScores((all) => clearScores(all, game.id))}
+              onClick={() => updateScores((all) => clearScores(all, mode, game.id))}
               className={pixelButtonClass()}
             >
-              CLEAR SCORES
+              CLEAR SCORE
             </button>
           </div>
         </div>
@@ -190,5 +210,26 @@ function ScoringPanel({ game, scores, average, onShare, onDone }: ScoringPanelPr
         </span>
       )}
     </Panel>
+  );
+}
+
+type ScoreRowProps = {
+  label: string;
+  value: number | undefined;
+  numbered?: boolean;
+  onPick: (value: number) => void;
+};
+
+function ScoreRow({ label, value, numbered, onPick }: ScoreRowProps) {
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      <div className="flex justify-between gap-3 font-display text-[10px] leading-[1.3]">
+        <span className="uppercase">{label}</span>
+        <span>
+          {value ?? "–"}/{MAX_SCORE}
+        </span>
+      </div>
+      <ScoreBar label={label} value={value} numbered={numbered} onPick={onPick} />
+    </div>
   );
 }

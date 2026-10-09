@@ -6,10 +6,11 @@ const SEGMENTS = Array.from({ length: MAX_SCORE }, (_, index) => index + 1);
 type ScoreBarProps = {
   label: string;
   value: number | undefined;
+  numbered?: boolean;
   onPick: (value: number) => void;
 };
 
-export function ScoreBar({ label, value, onPick }: ScoreBarProps) {
+export function ScoreBar({ label, value, numbered = false, onPick }: ScoreBarProps) {
   const fill = value === undefined ? undefined : tierForScore(value).color;
   return (
     <div role="group" aria-label={`${label} score`} className="flex gap-1">
@@ -22,11 +23,13 @@ export function ScoreBar({ label, value, onPick }: ScoreBarProps) {
             onClick={() => onPick(segment)}
             aria-label={`${label}: ${segment} out of ${MAX_SCORE}`}
             aria-pressed={value === segment}
-            className={`h-11 min-w-0 flex-1 border-3 border-ink p-0 ${
+            className={`h-11 min-w-0 flex-1 border-3 border-ink p-0 font-display text-sm leading-none text-ink ${
               filled ? "shadow-bevel" : "bg-track shadow-[inset_3px_3px_0_rgb(16_16_32/0.12)]"
             }`}
             style={filled ? { background: fill } : undefined}
-          />
+          >
+            {numbered ? segment : null}
+          </button>
         );
       })}
     </div>
@@ -64,8 +67,8 @@ const BADGE_SIZES = {
   poster: "size-[72px] text-[30px] shadow-[inset_5px_5px_0_rgb(255_255_255/0.4),inset_-5px_-5px_0_rgb(0_0_0/0.2)]",
 } as const;
 
-export function OverallBadge({ average, size }: { average: number | null; size: keyof typeof BADGE_SIZES }) {
-  const tier = average === null ? null : tierForScore(average);
+export function OverallBadge({ score, size }: { score: number | null; size: keyof typeof BADGE_SIZES }) {
+  const tier = score === null ? null : tierForScore(score);
   return (
     <span
       className={`box-border flex flex-none items-center justify-center border-3 border-ink font-display leading-none ${BADGE_SIZES[size]} ${

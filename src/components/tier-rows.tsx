@@ -1,19 +1,20 @@
-import { GameTile } from "@/components/game-tile";
+import { GameTile, tileListClass } from "@/components/game-tile";
 import { Panel } from "@/components/ui";
 import { CATEGORIES } from "@/data/categories";
 import { TIERS, type TierLetter } from "@/data/tiers";
-import { tierBoard, type Scores } from "@/lib/scores";
+import { tierBoard, tierRange, type Scores, type ScoringMode } from "@/lib/scores";
 
 type TierRowsProps = {
   scores: Scores;
+  mode: ScoringMode;
   label: string;
   selectedId?: string | null;
   highlightTier?: TierLetter | null;
   onPick?: (gameId: string) => void;
 };
 
-export function TierRows({ scores, label, selectedId = null, highlightTier = null, onPick }: TierRowsProps) {
-  const board = tierBoard(scores);
+export function TierRows({ scores, mode, label, selectedId = null, highlightTier = null, onPick }: TierRowsProps) {
+  const board = tierBoard(scores, mode);
   return (
     <Panel as="section" aria-label={label} className="flex flex-col gap-2.5 p-[clamp(8px,1.5vw,14px)]">
       {TIERS.map((tier) => {
@@ -25,24 +26,25 @@ export function TierRows({ scores, label, selectedId = null, highlightTier = nul
               style={{ background: tier.color }}
             >
               <span className="font-display text-[clamp(18px,3vw,36px)] leading-none text-shadow-tier">{tier.letter}</span>
-              <span className="font-display text-[10px] leading-none">{tier.range}</span>
+              <span className="font-display text-[10px] leading-none">{tierRange(tier, mode)}</span>
             </div>
             <div
-              className={`flex min-w-0 flex-auto flex-wrap content-start items-stretch gap-x-2.5 gap-y-2 border-3 border-ink p-2.5 shadow-well ${
+              className={`${tileListClass} min-w-0 flex-auto border-3 border-ink p-2.5 shadow-well ${
                 highlightTier === tier.letter ? "bg-track-active" : "bg-track"
               }`}
             >
-              {entries.map(({ game, average }) => (
+              {entries.map(({ game, score }) => (
                 <GameTile
                   key={game.id}
                   game={game}
-                  average={average}
+                  score={score}
+                  mode={mode}
                   selected={selectedId === game.id}
                   onPick={onPick && (() => onPick(game.id))}
                 />
               ))}
               {entries.length === 0 && (
-                <span className="self-center px-1.5 text-base text-muted">No games score here yet</span>
+                <span className="col-span-full self-center px-1.5 text-base text-muted">No games score here yet</span>
               )}
             </div>
           </div>
@@ -52,7 +54,14 @@ export function TierRows({ scores, label, selectedId = null, highlightTier = nul
   );
 }
 
-export function CategoryChips() {
+export function ScoringSummary({ mode, switchHint = false }: { mode: ScoringMode; switchHint?: boolean }) {
+  if (mode === "simple") {
+    return (
+      <span className="text-base text-muted">
+        One score from 1 to 5 per game.{switchHint && " Switch to Advanced to score each category."}
+      </span>
+    );
+  }
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-base text-muted">Scored on</span>

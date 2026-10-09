@@ -4,7 +4,7 @@ import { toBlob } from "html-to-image";
 import { useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { SHARE_CARD_SIZES, ShareBoardCard, ShareGameCard } from "@/components/share-cards";
 import type { Game } from "@/data/games";
-import type { Scores } from "@/lib/scores";
+import type { Scores, ScoringMode } from "@/lib/scores";
 import { MAX_NAME_LENGTH, shareHash, type SharedRanking } from "@/lib/share-link";
 import { setShareName, useShareName } from "@/lib/share-name-store";
 
@@ -22,6 +22,7 @@ export function shareSizeLabel(target: ShareTarget): string {
 type ShareCardPreviewProps = {
   target: ShareTarget;
   scores: Scores;
+  mode: ScoringMode;
   name: string;
   maxWidth: number;
   cardRef: RefObject<HTMLDivElement | null>;
@@ -29,7 +30,7 @@ type ShareCardPreviewProps = {
 
 const PREVIEW_BORDER = 6;
 
-export function ShareCardPreview({ target, scores, name, maxWidth, cardRef }: ShareCardPreviewProps) {
+export function ShareCardPreview({ target, scores, mode, name, maxWidth, cardRef }: ShareCardPreviewProps) {
   const size = SHARE_CARD_SIZES[target.kind];
   const slotRef = useRef<HTMLDivElement>(null);
   const [available, setAvailable] = useState(maxWidth + PREVIEW_BORDER);
@@ -57,9 +58,9 @@ export function ShareCardPreview({ target, scores, name, maxWidth, cardRef }: Sh
       >
         <div style={{ width: size.width, height: size.height, transform: `scale(${scale})`, transformOrigin: "0 0" }}>
           {target.kind === "board" ? (
-            <ShareBoardCard scores={scores} name={name} cardRef={cardRef} />
+            <ShareBoardCard scores={scores} mode={mode} name={name} cardRef={cardRef} />
           ) : (
-            <ShareGameCard game={target.game} scores={scores} name={name} cardRef={cardRef} />
+            <ShareGameCard game={target.game} scores={scores} mode={mode} name={name} cardRef={cardRef} />
           )}
         </div>
       </div>
@@ -124,6 +125,7 @@ function isDomError(error: unknown, name: string): boolean {
 type ShareActionsProps = {
   target: ShareTarget;
   scores: Scores;
+  mode: ScoringMode;
   cardRef: RefObject<HTMLDivElement | null>;
 };
 
@@ -132,7 +134,7 @@ const downloadClass =
 const secondaryClass =
   "inline-flex min-h-[46px] flex-[1_1_120px] items-center justify-center border-3 border-ink bg-cream px-3 font-display text-[10px] leading-[1.2] whitespace-nowrap text-ink shadow-raised disabled:opacity-60";
 
-export function ShareActions({ target, scores, cardRef }: ShareActionsProps) {
+export function ShareActions({ target, scores, mode, cardRef }: ShareActionsProps) {
   const name = useShareName();
   const [status, setStatus] = useState<Status>(null);
   const [busy, setBusy] = useState(false);
@@ -183,8 +185,8 @@ export function ShareActions({ target, scores, cardRef }: ShareActionsProps) {
   const shareUrl = () => {
     const ranking: SharedRanking =
       target.kind === "board"
-        ? { kind: "board", scores, name }
-        : { kind: "game", gameId: target.game.id, scores, name };
+        ? { kind: "board", mode, scores, name }
+        : { kind: "game", gameId: target.game.id, mode, scores, name };
     return `${window.location.origin}/share#${shareHash(ranking)}`;
   };
 

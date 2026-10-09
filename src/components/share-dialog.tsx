@@ -11,7 +11,7 @@ import {
 } from "@/components/share";
 import { PixelCaret, pixelButtonClass } from "@/components/ui";
 import { GAMES, findGame } from "@/data/games";
-import type { Scores } from "@/lib/scores";
+import type { Scores, ScoringMode } from "@/lib/scores";
 import { useShareName } from "@/lib/share-name-store";
 
 export type ShareDialogState = { kind: "board" } | { kind: "game"; gameId: string };
@@ -19,13 +19,14 @@ export type ShareDialogState = { kind: "board" } | { kind: "game"; gameId: strin
 type ShareDialogProps = {
   state: ShareDialogState | null;
   scores: Scores;
+  mode: ScoringMode;
   onChange: (state: ShareDialogState) => void;
   onClose: () => void;
 };
 
 const legendClass = "mb-3 p-0 font-display text-[11px] leading-[1.3] text-muted";
 
-export function ShareDialog({ state, scores, onChange, onClose }: ShareDialogProps) {
+export function ShareDialog({ state, scores, mode, onChange, onClose }: ShareDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const name = useShareName();
@@ -71,7 +72,7 @@ export function ShareDialog({ state, scores, onChange, onClose }: ShareDialogPro
 
             <div className="flex flex-wrap items-start gap-6">
               <div className="flex min-w-0 flex-[1_1_340px] flex-col items-center gap-3 border-3 border-ink bg-well-dark p-4 shadow-well-dark">
-                <ShareCardPreview target={target} scores={scores} name={name} maxWidth={324} cardRef={cardRef} />
+                <ShareCardPreview target={target} scores={scores} mode={mode} name={name} maxWidth={324} cardRef={cardRef} />
                 <span className="text-[15px] text-well-dark-text">
                   {shareSizeLabel(target)} · {shareFileName(target)}
                 </span>
@@ -122,7 +123,8 @@ export function ShareDialog({ state, scores, onChange, onClose }: ShareDialogPro
                       })}
                     </div>
                     <p className="m-0 mt-3 text-base text-muted">
-                      {target.game.name}: its overall tier and every score
+                      {target.game.name}
+                      {mode === "simple" ? ": its tier and score" : ": its overall tier and every score"}
                     </p>
                   </fieldset>
                 )}
@@ -132,6 +134,7 @@ export function ShareDialog({ state, scores, onChange, onClose }: ShareDialogPro
                   key={target.kind === "board" ? "board" : target.game.id}
                   target={target}
                   scores={scores}
+                  mode={mode}
                   cardRef={cardRef}
                 />
               </div>

@@ -21,3 +21,8 @@ output "certificate_validation_records" {
 output "site_url" {
   value = "https://${var.domain_name}"
 }
+
+output "github_deploy_role_arn" {
+  description = "Role for the GitHub Actions deploy workflow. Store it as the AWS_ROLE_ARN repository secret."
+  value       = aws_iam_role.github_deploy.arn
+}

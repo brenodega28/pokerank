@@ -1,25 +1,29 @@
 import { Cartridge } from "@/components/cartridge";
 import type { Game } from "@/data/games";
 import { tierForScore } from "@/data/tiers";
-import { formatAverage } from "@/lib/scores";
+import { formatScore, type ScoringMode } from "@/lib/scores";
+
+export const tileListClass =
+  "flex flex-wrap content-start items-stretch gap-x-2.5 gap-y-2 max-sm:grid max-sm:grid-cols-[repeat(auto-fill,105px)] max-sm:justify-between";
 
 type GameTileProps = {
   game: Game;
-  average: number | null;
+  score: number | null;
+  mode: ScoringMode;
   selected?: boolean;
   onPick?: () => void;
 };
 
-export function GameTile({ game, average, selected = false, onPick }: GameTileProps) {
+export function GameTile({ game, score, mode, selected = false, onPick }: GameTileProps) {
   const description =
-    average === null ? "not rated" : `scored ${formatAverage(average)}, ${tierForScore(average).letter} tier`;
+    score === null ? "not rated" : `scored ${formatScore(score, mode)}, ${tierForScore(score).letter} tier`;
   const content = (
     <>
       <Cartridge
         game={game}
         size="board"
         selected={selected}
-        scoreText={average === null ? undefined : formatAverage(average)}
+        scoreText={score === null ? undefined : formatScore(score, mode)}
       />
       <span className="block px-0.5 text-[13px] leading-[1.15]">{game.name}</span>
     </>

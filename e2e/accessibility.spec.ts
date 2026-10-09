@@ -1,14 +1,26 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { HGSS_SCORES, gameTile, seedScores } from "./fixtures";
+import { HGSS_SCORES, gameTile, modeButton, scoreBox, seedMode, seedScores } from "./fixtures";
 
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
 test.beforeEach(async ({ page }) => {
-  await seedScores(page, { hgss: HGSS_SCORES });
+  await seedScores(page, { simple: { hgss: 5 }, advanced: { hgss: HGSS_SCORES } });
 });
 
-for (const path of ["/", "/games/hgss", "/share#v=1&k=b&s=hgss9a8a88a"]) {
+for (const mode of ["simple", "advanced"] as const) {
+  for (const path of ["/", "/games/hgss"]) {
+    test(`${path} in ${mode} mode has no WCAG A/AA violations`, async ({ page }) => {
+      await seedMode(page, mode);
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+      expect(results.violations).toEqual([]);
+    });
+  }
+}
+
+for (const path of ["/share#v=2&k=b&m=a&s=hgss5545445", "/share#v=2&k=g&m=s&s=hgss5"]) {
   test(`${path} has no WCAG A/AA violations`, async ({ page }) => {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -34,8 +46,13 @@ test("toggle buttons report their pressed state", async ({ page }) => {
   await expect(tile).toHaveAttribute("aria-pressed", "false");
   await tile.click();
   await expect(tile).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("button", { name: "Pokédex: 9 out of 10" })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("button", { name: "Pokédex: 8 out of 10" })).toHaveAttribute("aria-pressed", "false");
+  await expect(scoreBox(page, "Score", 5)).toHaveAttribute("aria-pressed", "true");
+  await expect(scoreBox(page, "Score", 4)).toHaveAttribute("aria-pressed", "false");
+  await expect(modeButton(page, "SIMPLE")).toHaveAttribute("aria-pressed", "true");
+  await expect(modeButton(page, "ADVANCED")).toHaveAttribute("aria-pressed", "false");
+  await modeButton(page, "ADVANCED").click();
+  await expect(scoreBox(page, "Pokédex", 5)).toHaveAttribute("aria-pressed", "true");
+  await expect(scoreBox(page, "Pokédex", 4)).toHaveAttribute("aria-pressed", "false");
 
   await page.getByRole("button", { name: "SHARE GAME" }).click();
   const dialog = page.getByRole("dialog");
@@ -56,9 +73,9 @@ test("the board works from the keyboard", async ({ page, isMobile }) => {
   await gameTile(page, "Yellow").focus();
   await page.keyboard.press("Enter");
   await expect(page.getByText("How good is Yellow?")).toBeVisible();
-  await page.getByRole("button", { name: "Region: 8 out of 10" }).focus();
+  await scoreBox(page, "Score", 4).focus();
   await page.keyboard.press("Space");
-  await expect(gameTile(page, "Yellow")).toHaveAccessibleName("Yellow, scored 8.0, A tier");
+  await expect(gameTile(page, "Yellow")).toHaveAccessibleName("Yellow, scored 4, A tier");
 
   const shareBoard = page.getByRole("button", { name: "SHARE BOARD" });
   await shareBoard.focus();

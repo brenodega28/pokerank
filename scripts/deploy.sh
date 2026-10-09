@@ -4,8 +4,8 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
-bucket="$(terraform -chdir=infra output -raw bucket_name)"
-distribution="$(terraform -chdir=infra output -raw distribution_id)"
+bucket="${SITE_BUCKET:-$(terraform -chdir=infra output -raw bucket_name)}"
+distribution="${DISTRIBUTION_ID:-$(terraform -chdir=infra output -raw distribution_id)}"
 
 npm run build
 

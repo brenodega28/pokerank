@@ -1,54 +1,110 @@
 import { expect, test } from "@playwright/test";
-import { gameTile, scoreBox } from "./fixtures";
+import { gameTile, modeButton, scoreBox, seedMode } from "./fixtures";
 
-test("scoring a game moves it into the tier for its average", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByText("0/22")).toBeVisible();
+test.describe("simple mode", () => {
+  test("is the default and puts a game straight into the tier for its score", async ({ page }) => {
+    await page.goto("/");
+    await expect(modeButton(page, "SIMPLE")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText("One score from 1 to 5 per game.")).toBeVisible();
+    await expect(page.getByText("0/22")).toBeVisible();
 
-  await gameTile(page, "Red & Blue").click();
-  await expect(page.getByText("How good is Red & Blue?")).toBeVisible();
-  await scoreBox(page, "Pokédex", 9).click();
-  await scoreBox(page, "Region", 10).click();
+    await gameTile(page, "Red & Blue").click();
+    await expect(page.getByText("How good is Red & Blue?")).toBeVisible();
+    await expect(scoreBox(page, "Score", 4)).toHaveText("4");
+    await scoreBox(page, "Score", 4).click();
 
-  await expect(gameTile(page, "Red & Blue")).toHaveAccessibleName("Red & Blue, scored 9.5, S tier");
-  await expect(page.getByText("1/22")).toBeVisible();
+    await expect(gameTile(page, "Red & Blue")).toHaveAccessibleName("Red & Blue, scored 4, A tier");
+    await expect(page.getByText("1/22")).toBeVisible();
+  });
+
+  test("picking the current score again clears it", async ({ page }) => {
+    await page.goto("/");
+    await gameTile(page, "Yellow").click();
+
+    const three = scoreBox(page, "Score", 3);
+    await three.click();
+    await expect(three).toHaveAttribute("aria-pressed", "true");
+    await expect(gameTile(page, "Yellow")).toHaveAccessibleName("Yellow, scored 3, B tier");
+
+    await three.click();
+    await expect(three).toHaveAttribute("aria-pressed", "false");
+    await expect(gameTile(page, "Yellow")).toHaveAccessibleName("Yellow, not rated");
+  });
+
+  test("the game page scores the same single score", async ({ page }) => {
+    await page.goto("/games/rb");
+    await expect(page.getByText("NOT SCORED")).toBeVisible();
+    await scoreBox(page, "Score", 2).click();
+    await expect(page.getByText("SCORED", { exact: true })).toBeVisible();
+
+    await page.getByRole("link", { name: "MY TIER BOARD" }).click();
+    await expect(gameTile(page, "Red & Blue")).toHaveAccessibleName("Red & Blue, scored 2, C tier");
+  });
 });
 
-test("picking the current score again clears it", async ({ page }) => {
-  await page.goto("/");
-  await gameTile(page, "Yellow").click();
+test.describe("advanced mode", () => {
+  test.beforeEach(async ({ page }) => {
+    await seedMode(page, "advanced");
+  });
 
-  const seven = scoreBox(page, "Story", 7);
-  await seven.click();
-  await expect(seven).toHaveAttribute("aria-pressed", "true");
-  await expect(gameTile(page, "Yellow")).toHaveAccessibleName("Yellow, scored 7.0, B tier");
+  test("scoring categories moves a game into the tier for its average", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByText("Scored on")).toBeVisible();
+    await gameTile(page, "Red & Blue").click();
+    await scoreBox(page, "Pokédex", 5).click();
+    await scoreBox(page, "Region", 4).click();
 
-  await seven.click();
-  await expect(seven).toHaveAttribute("aria-pressed", "false");
-  await expect(gameTile(page, "Yellow")).toHaveAccessibleName("Yellow, not rated");
+    await expect(gameTile(page, "Red & Blue")).toHaveAccessibleName("Red & Blue, scored 4.5, S tier");
+    await expect(page.getByText("1/22")).toBeVisible();
+  });
+
+  test("clear score resets the game and done closes the panel", async ({ page }) => {
+    await page.goto("/");
+    await gameTile(page, "Crystal").click();
+    await scoreBox(page, "Soundtrack", 3).click();
+    await scoreBox(page, "Graphics", 2).click();
+    await expect(gameTile(page, "Crystal")).toHaveAccessibleName("Crystal, scored 2.5, C tier");
+
+    await page.getByRole("button", { name: "CLEAR SCORE" }).click();
+    await expect(gameTile(page, "Crystal")).toHaveAccessibleName("Crystal, not rated");
+
+    await page.getByRole("button", { name: "DONE" }).click();
+    await expect(page.getByText("How good is Crystal?")).toBeHidden();
+    await expect(page.getByText("Tap a game to score it.")).toBeVisible();
+  });
+
+  test("the game page and the board share the same scores", async ({ page }) => {
+    await page.goto("/games/rb");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Red & Blue");
+    await scoreBox(page, "Region", 2).click();
+    await expect(page.getByText("1/7 SCORED")).toBeVisible();
+
+    await page.getByRole("link", { name: "MY TIER BOARD" }).click();
+    await expect(gameTile(page, "Red & Blue")).toHaveAccessibleName("Red & Blue, scored 2.0, C tier");
+  });
 });
 
-test("clear scores resets the game and done closes the panel", async ({ page }) => {
+test("each mode keeps its own scores", async ({ page }) => {
   await page.goto("/");
-  await gameTile(page, "Crystal").click();
-  await scoreBox(page, "Soundtrack", 6).click();
-  await scoreBox(page, "Graphics", 4).click();
-  await expect(gameTile(page, "Crystal")).toHaveAccessibleName("Crystal, scored 5.0, C tier");
+  await gameTile(page, "Emerald").click();
+  await scoreBox(page, "Score", 5).click();
+  await expect(gameTile(page, "Emerald")).toHaveAccessibleName("Emerald, scored 5, S tier");
 
-  await page.getByRole("button", { name: "CLEAR SCORES" }).click();
-  await expect(gameTile(page, "Crystal")).toHaveAccessibleName("Crystal, not rated");
+  await modeButton(page, "ADVANCED").click();
+  await expect(modeButton(page, "ADVANCED")).toHaveAttribute("aria-pressed", "true");
+  await expect(gameTile(page, "Emerald")).toHaveAccessibleName("Emerald, not rated");
+  await scoreBox(page, "Story", 1).click();
+  await expect(gameTile(page, "Emerald")).toHaveAccessibleName("Emerald, scored 1.0, D tier");
 
-  await page.getByRole("button", { name: "DONE" }).click();
-  await expect(page.getByText("How good is Crystal?")).toBeHidden();
-  await expect(page.getByText("Tap a game to score it.")).toBeVisible();
+  await modeButton(page, "SIMPLE").click();
+  await expect(gameTile(page, "Emerald")).toHaveAccessibleName("Emerald, scored 5, S tier");
 });
 
-test("the game page and the board share the same scores", async ({ page }) => {
-  await page.goto("/games/rb");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Red & Blue");
-  await scoreBox(page, "Region", 4).click();
-  await expect(page.getByText("1/7 SCORED")).toBeVisible();
+test("the mode chosen on the game page carries over to the board", async ({ page }) => {
+  await page.goto("/games/e");
+  await modeButton(page, "ADVANCED").click();
+  await expect(page.getByText("0/7 SCORED")).toBeVisible();
 
   await page.getByRole("link", { name: "MY TIER BOARD" }).click();
-  await expect(gameTile(page, "Red & Blue")).toHaveAccessibleName("Red & Blue, scored 4.0, D tier");
+  await expect(modeButton(page, "ADVANCED")).toHaveAttribute("aria-pressed", "true");
 });

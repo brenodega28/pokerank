@@ -1,9 +1,21 @@
 "use client";
 
 import { createLocalStore } from "@/lib/local-store";
-import { parseScores, type Scores } from "@/lib/scores";
+import { NO_SCORES, isScoringMode, parseScores, type Scores, type ScoringMode } from "@/lib/scores";
 
-const store = createLocalStore<Scores>("tierdex:scores:v1", parseScores, {});
+const scoreStore = createLocalStore<Scores>("pokeranked:scores:v2", parseScores, NO_SCORES);
 
-export const useScores = store.use;
-export const updateScores = store.update;
+export const useScores = scoreStore.use;
+export const updateScores = scoreStore.update;
+
+const modeStore = createLocalStore<ScoringMode>(
+  "pokeranked:mode:v1",
+  (value) => (isScoringMode(value) ? value : "simple"),
+  "simple",
+);
+
+export const useScoringMode = modeStore.use;
+
+export function setScoringMode(mode: ScoringMode) {
+  modeStore.update(() => mode);
+}

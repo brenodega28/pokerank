@@ -1,5 +1,6 @@
 import { Cartridge } from "@/components/cartridge";
-import type { Game } from "@/data/games";
+import { tileCartridgeAttributes } from "@/components/scoring-dialog";
+import { gameShortMetaLine, type Game } from "@/data/games";
 import { tierForScore } from "@/data/tiers";
 import { formatScore, type ScoringMode } from "@/lib/scores";
 
@@ -19,12 +20,15 @@ export function GameTile({ game, score, mode, selected = false, onPick }: GameTi
     score === null ? "not rated" : `scored ${formatScore(score, mode)}, ${tierForScore(score).letter} tier`;
   const content = (
     <>
-      <Cartridge
-        game={game}
-        size="board"
-        selected={selected}
-        scoreText={score === null ? undefined : formatScore(score, mode)}
-      />
+      <span {...tileCartridgeAttributes(game.id)} className={`block ${selected ? "invisible" : ""}`}>
+        <Cartridge
+          game={game}
+          size="board"
+          footer={gameShortMetaLine(game)}
+          liftOnHover={Boolean(onPick)}
+          scoreText={score === null ? undefined : formatScore(score, mode)}
+        />
+      </span>
       <span className="block px-0.5 text-[13px] leading-[1.15]">{game.name}</span>
     </>
   );
@@ -45,9 +49,7 @@ export function GameTile({ game, score, mode, selected = false, onPick }: GameTi
       onClick={onPick}
       aria-pressed={selected}
       aria-label={`${game.name}, ${description}`}
-      className={`${layout} border-0 bg-transparent transition-transform duration-[120ms] ease-[steps(2)] ${
-        selected ? "-translate-x-0.5 -translate-y-1" : ""
-      }`}
+      className={`${layout} group border-0 bg-transparent`}
     >
       {content}
     </button>

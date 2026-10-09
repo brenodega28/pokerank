@@ -1,6 +1,15 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { HGSS_SCORES, gameTile, modeButton, scoreBox, seedMode, seedScores } from "./fixtures";
+import {
+  HGSS_SCORES,
+  closeScoring,
+  gameTile,
+  modeButton,
+  scoreBox,
+  seedMode,
+  seedScores,
+  waitForAnimations,
+} from "./fixtures";
 
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
@@ -32,11 +41,14 @@ for (const path of ["/share#v=2&k=b&m=a&s=hgss5545445", "/share#v=2&k=g&m=s&s=hg
 test("the open scoring panel and share dialog have no WCAG A/AA violations", async ({ page }) => {
   await page.goto("/");
   await gameTile(page, "HeartGold & SoulSilver").click();
-  expect((await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()).violations).toEqual([]);
+  await waitForAnimations(page);
+  const scoring = await new AxeBuilder({ page }).include("dialog[open]").withTags(WCAG_TAGS).analyze();
+  expect(scoring.violations).toEqual([]);
 
   await page.getByRole("button", { name: "SHARE GAME" }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  const results = await new AxeBuilder({ page }).include("dialog").withTags(WCAG_TAGS).analyze();
+  await expect(page.getByText("How good is HeartGold & SoulSilver?")).toBeHidden();
+  await expect(page.getByRole("dialog", { name: "SHARE A PICTURE" })).toBeVisible();
+  const results = await new AxeBuilder({ page }).include("dialog[open]").withTags(WCAG_TAGS).analyze();
   expect(results.violations).toEqual([]);
 });
 
@@ -50,7 +62,9 @@ test("toggle buttons report their pressed state", async ({ page }) => {
   await expect(scoreBox(page, "Score", 4)).toHaveAttribute("aria-pressed", "false");
   await expect(modeButton(page, "SIMPLE")).toHaveAttribute("aria-pressed", "true");
   await expect(modeButton(page, "ADVANCED")).toHaveAttribute("aria-pressed", "false");
+  await closeScoring(page);
   await modeButton(page, "ADVANCED").click();
+  await tile.click();
   await expect(scoreBox(page, "Pokédex", 5)).toHaveAttribute("aria-pressed", "true");
   await expect(scoreBox(page, "Pokédex", 4)).toHaveAttribute("aria-pressed", "false");
 
@@ -76,6 +90,9 @@ test("the board works from the keyboard", async ({ page, isMobile }) => {
   await scoreBox(page, "Score", 4).focus();
   await page.keyboard.press("Space");
   await expect(gameTile(page, "Yellow")).toHaveAccessibleName("Yellow, scored 4, A tier");
+  await page.keyboard.press("Escape");
+  await expect(page.getByText("How good is Yellow?")).toBeHidden();
+  await expect(gameTile(page, "Yellow")).toBeFocused();
 
   const shareBoard = page.getByRole("button", { name: "SHARE BOARD" });
   await shareBoard.focus();

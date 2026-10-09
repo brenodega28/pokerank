@@ -8,7 +8,7 @@ const SIZES = {
     code: "h-[15px] px-1 pt-[3px] text-[9px]",
     scan: "[--scan:2px]",
     badge: "right-[3px] bottom-[3px] px-[3px] pt-[3px] pb-0.5 text-[9px]",
-    footer: null,
+    footer: "h-3 px-[3px] pt-[3px] text-[5.5px] tracking-[-0.25px] whitespace-nowrap",
   },
   card: {
     shell: "h-[100px] w-[94px] rounded-[4px_4px_4px_11px] border-2",
@@ -51,17 +51,20 @@ type CartridgeProps = {
   game: Game;
   size: CartridgeSize;
   scoreText?: string;
-  selected?: boolean;
   footer?: string;
+  liftOnHover?: boolean;
 };
 
-export function Cartridge({ game, size, scoreText, selected = false, footer }: CartridgeProps) {
+const LIFT_ON_HOVER =
+  "motion-safe:transition-[translate,box-shadow] motion-safe:duration-[160ms] motion-safe:ease-out group-hover:-translate-y-[5px] group-hover:shadow-cart-small-lifted group-focus-visible:-translate-y-[5px] group-focus-visible:shadow-cart-small-lifted";
+
+export function Cartridge({ game, size, scoreText, footer, liftOnHover = false }: CartridgeProps) {
   const sizing = SIZES[size];
   return (
     <span
       aria-hidden="true"
-      className={`relative box-border block flex-none border-cart-edge bg-cart-shell ${sizing.shell} ${
-        selected ? "shadow-cart-small-selected" : sizing.shellShadow
+      className={`relative box-border block flex-none border-cart-edge bg-cart-shell ${sizing.shell} ${sizing.shellShadow} ${
+        liftOnHover ? LIFT_ON_HOVER : ""
       }`}
     >
       <span className={`absolute flex flex-col overflow-hidden bg-cart-label ${sizing.label}`}>

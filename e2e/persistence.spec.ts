@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { MODE_KEY, SCORES_KEY, gameTile, modeButton, scoreBox, storedScores } from "./fixtures";
+import { MODE_KEY, SCORES_KEY, closeScoring, gameTile, modeButton, scoreBox, storedScores } from "./fixtures";
 
 test("scores and the mode survive a reload", async ({ page }) => {
   await page.goto("/");
   await gameTile(page, "Emerald").click();
   await scoreBox(page, "Score", 4).click();
+  await closeScoring(page);
   await modeButton(page, "ADVANCED").click();
+  await gameTile(page, "Emerald").click();
   await scoreBox(page, "Pokédex", 3).click();
   await expect.poll(() => storedScores(page)).toEqual({ simple: { e: 4 }, advanced: { e: { pokedex: 3 } } });
 

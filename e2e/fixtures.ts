@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import type { Scores, ScoringMode } from "@/lib/scores";
 
 export const SCORES_KEY = "pokeranked:scores:v2";
@@ -37,4 +37,16 @@ export function scoreBox(page: Page, label: string, value: number) {
 
 export function modeButton(page: Page, mode: "SIMPLE" | "ADVANCED") {
   return page.getByRole("group", { name: "Scoring mode" }).getByRole("button", { name: mode });
+}
+
+export async function waitForAnimations(page: Page) {
+  await page.waitForFunction(() => {
+    const dialog = document.querySelector("dialog[open]");
+    return dialog !== null && dialog.getAnimations({ subtree: true }).every((animation) => animation.playState !== "running");
+  });
+}
+
+export async function closeScoring(page: Page) {
+  await page.getByRole("button", { name: "DONE" }).click();
+  await expect(page.getByText(/^How good is/)).toBeHidden();
 }

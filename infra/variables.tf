@@ -40,6 +40,12 @@ variable "github_repository" {
   default     = "brenodega28/pokerank"
 }
 
+variable "github_oidc_subject_prefix" {
+  description = "Repository part of the GitHub OIDC subject claim. This repo uses immutable subjects (owner and repo IDs), shown by GET /repos/{owner}/{repo}/actions/oidc/customization/sub."
+  type        = string
+  default     = "repo:brenodega28@26328476/pokerank@1410768130"
+}
+
 variable "github_deploy_branch" {
   description = "Branch whose workflows may assume the deploy role."
   type        = string

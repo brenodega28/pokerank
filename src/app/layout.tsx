@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Pixelify_Sans, Press_Start_2P } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
@@ -20,6 +20,10 @@ export const metadata: Metadata = {
     template: "PokéRanked: %s",
   },
   description: "Rank every main-series Pokémon game by Pokédex, region, story and soundtrack.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#282840",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

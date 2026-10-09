@@ -97,7 +97,7 @@
 @layer base {
   body {
     margin: 0;
-    background-color: var(--color-grass);
+    background-color: var(--color-night);
     color: var(--color-ink);
     font-family: var(--font-body);
     font-size: 17px;

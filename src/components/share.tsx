@@ -95,11 +95,10 @@ type Status = { message: string; tone: "success" | "error" } | null;
 
 async function capturePng(node: HTMLElement): Promise<Blob> {
   await document.fonts.ready;
-  const blob = await toBlob(node, {
-    pixelRatio: 1,
-    width: node.offsetWidth,
-    height: node.offsetHeight,
-  });
+  await Promise.all([...node.querySelectorAll("img")].map((image) => image.decode().catch(() => {})));
+  const options = { pixelRatio: 1, width: node.offsetWidth, height: node.offsetHeight };
+  await toBlob(node, options);
+  const blob = await toBlob(node, options);
   if (!blob) throw new Error("Capture failed");
   return blob;
 }
